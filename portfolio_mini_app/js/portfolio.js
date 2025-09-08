@@ -3,7 +3,7 @@ import { trackEvent } from './script.js';
 // --- Глобальное состояние ---
 let portfolioChartInstance = null;
 let popupChartInstance = null;
-const API_BASE_URL = window.location.origin;
+const API_BASE_URL = "[https://oooooo-q7ete6l6t-mishashegoleh-2041s-projects.vercel.app/](https://oooooo-q7ete6l6t-mishashegoleh-2041s-projects.vercel.app/)";
 
 // --- Инициализация страницы ---
 document.addEventListener('DOMContentLoaded', async () => {
