@@ -1,0 +1,173 @@
+/* --- Общие стили для всего приложения --- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.footer {
+    padding: 1.5rem 0 1rem;
+    text-align: center;
+    color: #aaaaaa;
+    font-size: 0.8rem;
+}
+
+
+/* --- Стили для главной страницы (index.html) --- */
+
+.hero-section {
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+}
+
+.hero-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1rem;
+    color: #aaaaaa;
+    margin-bottom: 2.5rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 200px;
+    text-align: center;
+}
+
+.btn-main {
+    background-color: #dc2626; /* Красный */
+    color: #ffffff;
+}
+
+.btn-main:hover {
+    background-color: #b91c1c; /* Темно-красный */
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #ffffff;
+    border: 2px solid #333333; /* Серая рамка */
+}
+
+.btn-secondary:hover {
+    background-color: #1c1c1d; /* Темно-серый фон */
+    border-color: #1c1c1d;
+}
+
+/* --- НОВЫЕ СТИЛИ ДЛЯ POPUP --- */
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 1000;
+    padding: 1rem;
+}
+.popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+.popup-content {
+    background-color: #1c1c1d;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+.popup-overlay.active .popup-content {
+    transform: scale(1);
+}
+.popup-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: #aaaaaa;
+    cursor: pointer;
+}
+.popup-content h3 {
+    margin-bottom: 1rem;
+}
+.popup-content p {
+    color: #aaaaaa;
+    margin-bottom: 1.5rem;
+}
+.definitions-list {
+    text-align: left;
+    margin-bottom: 2rem;
+}
+.definitions-list dt {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+.definitions-list dd {
+    color: #aaaaaa;
+    font-size: 0.9rem;
+    margin-left: 0;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+    margin-bottom: 1rem;
+}
+.definitions-list dd:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+

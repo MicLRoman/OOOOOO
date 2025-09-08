@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Следующий шаг</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/final.css">
+</head>
+<body>
+    <div class="container">
+        <main class="main-content">
+            <div class="final-card">
+                <h1 class="final-title">Портфель готов к покупке!</h1>
+                <p class="final-subtitle">
+                    Функция автоматического приобретения активов находится в разработке. 
+                    А пока вы можете быстро купить все активы из вашего портфеля в одном месте.
+                </p>
+                
+                <div class="button-group">
+                    <a href="https://finuslugi.ru/" target="_blank" class="btn btn-main">
+                        Перейти на Финуслуги
+                    </a>
+                    <a href="index.html" class="btn btn-secondary">
+                        Вернуться на главную
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+    </script>
+</body>
+</html>

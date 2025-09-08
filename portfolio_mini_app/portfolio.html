@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Ваш портфель</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/portfolio.css">
+</head>
+<body>
+
+    <div class="container">
+        <div class="portfolio-header">
+            <h1 class="page-title">Ваш портфель</h1>
+            <div class="header-buttons">
+                <button class="btn btn-main" id="edit-portfolio-btn">Редактировать</button>
+                <button class="btn btn-secondary" id="restart-btn">Начать сначала</button>
+            </div>
+        </div>
+
+        <div class="portfolio-card">
+            <div class="info-item">
+                <span class="label">Сумма:</span>
+                <span class="value" id="portfolio-amount"></span>
+            </div>
+            <div class="info-item">
+                <span class="label">Срок:</span>
+                <span class="value" id="portfolio-term"></span>
+            </div>
+            <div class="info-item">
+                <span class="label">Стратегия:</span>
+                <span class="value" id="portfolio-strategy"></span>
+            </div>
+            
+            <div class="assets-section-toggle" id="assets-toggle">
+                <div class="assets-toggle-header">
+                    <h4>Активы в портфеле</h4>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="assets-list-container">
+                    <div class="assets-list" id="assets-list">
+                        <!-- Активы будут вставлены из JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="view-switcher">
+            <button class="switcher-btn active" data-view="chart">График успеха</button>
+            <button class="switcher-btn" data-view="similar">Похожие портфели</button>
+        </div>
+
+        <div class="content-views">
+            <div id="chart-view" class="view active">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">График успеха</h3>
+                            <p class="chart-subtitle">Динамика роста вашего портфеля</p>
+                        </div>
+                        <div class="chart-controls">
+                            <button class="chart-mode-btn" data-mode="5y">5 лет</button>
+                            <button class="chart-mode-btn" data-mode="1y">1 год</button>
+                            <button class="chart-mode-btn active" data-mode="future">Прогноз</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="performance-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="similar-view" class="view">
+                <div class="similar-container">
+                    <h3 class="similar-title">Успешные практики других людей</h3>
+                     <div class="slider-container">
+                        <button class="slider-arrow prev" id="slider-prev">‹</button>
+                        <div class="slider-wrapper" id="slider-wrapper"></div>
+                        <button class="slider-arrow next" id="slider-next">›</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ИСПРАВЛЕНИЕ: Возвращаем кнопку "Подтвердить портфель" -->
+        <div class="confirm-section">
+            <button class="btn btn-main btn-large" id="confirm-portfolio-btn">Подтвердить портфель</button>
+        </div>
+    </div>
+
+    <!-- Этот popup больше не используется для подтверждения, но может пригодиться для другого -->
+    <div id="portfolio-popup" class="popup-overlay">
+        <div class="popup-content">
+            <button class="popup-close" id="popup-close">&times;</button>
+            <h3 id="popup-title">Портфель пользователя</h3>
+            <div id="popup-assets" class="popup-assets-list"></div>
+            <div class="popup-chart-wrapper">
+                <canvas id="popup-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/script.js" type="module"></script>
+    <script src="js/portfolio.js" type="module"></script>
+
+</body>
+</html>
+

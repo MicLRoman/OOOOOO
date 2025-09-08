@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="color-scheme" content="dark">
+    <title>PortfolioBot</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <!-- Логотип или название вашего проекта -->
+        </header>
+
+        <main class="main-content">
+            <div class="hero-section">
+                <h1 class="hero-title">Сделайте первый безопасный шаг в Инвестиции</h1>
+                <p class="hero-subtitle">Мы предоставляем два подхода: демопортфель, где вы сами формируете портфель. И Автоподбор, где вы на основе шаблона сможете сделать свой уникальный портфель</p>
+                
+                <div class="button-group">
+                    <button id="demo-portfolio-btn" class="btn btn-secondary">
+                        Демопортфель
+                    </button>
+                    <button id="auto-selection-btn" class="btn btn-main">
+                        Автоподбор
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="credits">
+                    <p>&copy; 2025 PortfolioBot</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- НОВЫЙ POPUP С ОБЪЯСНЕНИЕМ -->
+    <div id="intro-popup" class="popup-overlay">
+        <div class="popup-content">
+            <button class="popup-close" id="intro-popup-close">&times;</button>
+            <h3>Добро пожаловать!</h3>
+            <p>Выберите подходящий для вас способ знакомства с инвестициями:</p>
+            <dl class="definitions-list">
+                <dt>Автоподбор</dt>
+                <dd>Наш робот-помощник задаст вам несколько вопросов и на основе ваших ответов соберет персональный стартовый портфель, который вы сможете доработать.</dd>
+                
+                <dt>Демопортфель</dt>
+                <dd>Продвинутый режим, где вы можете самостоятельно собрать портфель с нуля, изучая и выбирая различные активы в интерактивном конструкторе.</dd>
+            </dl>
+            <button class="btn btn-main" id="intro-popup-confirm">Понятно</button>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/script.js" type="module"></script>
+    <script src="js/index.js" type="module"></script>
+
+</body>
+</html>
+

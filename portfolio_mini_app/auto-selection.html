@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Автоподбор</title>
+    <!-- Сначала основные стили, потом стили для этой страницы -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auto-selection.css">
+</head>
+<body>
+
+    <!-- ОБНОВЛЕНИЕ: Добавляем главный контейнер для отступов -->
+    <div class="container">
+        <div class="layout-grid">
+            <div class="panel-left">
+                <button id="back-btn" class="back-btn" disabled>← Назад</button>
+
+                <!-- ШАГ 1: Сумма -->
+                <div id="step-1" class="step active">
+                    <h2 class="step-title">Сумма инвестиций</h2>
+                    <div class="input-group">
+                        <label for="amount">Сколько вы готовы вложить?</label>
+                        <input type="number" id="amount" value="50000" min="1000">
+                    </div>
+                    <div class="button-group-vertical">
+                        <button id="confirm-amount-btn" class="btn btn-main">Подтвердить</button>
+                    </div>
+                </div>
+
+                <!-- ШАГ 2: Срок -->
+                <div id="step-2" class="step">
+                    <h2 class="step-title">Срок инвестирования</h2>
+                    <div class="slider-group">
+                        <label for="term">Срок: <span id="term-value">5</span> лет</label>
+                        <input type="range" id="term" min="1" max="10" value="5">
+                        <div class="slider-labels">
+                            <span>1 год</span>
+                            <span>10 лет</span>
+                        </div>
+                    </div>
+                    <div class="button-group-vertical">
+                        <button id="confirm-term-btn" class="btn btn-main">Подтвердить</button>
+                        <button id="unknown-term-btn" class="btn btn-secondary">Не знаю</button>
+                    </div>
+                </div>
+
+                <!-- ШАГ 3: Риск-профиль -->
+                <div id="step-3" class="step">
+                    <h2 class="step-title">Выберите стратегию</h2>
+                    <div class="risk-buttons">
+                        <button class="risk-btn" data-risk="conservative">
+                            <span class="risk-title">Консервативная</span>
+                            <span class="risk-desc">Низкий риск, умеренная доходность</span>
+                        </button>
+                        <button class="risk-btn selected" data-risk="moderate">
+                            <span class="risk-title">Умеренная</span>
+                            <span class="risk-desc">Сбалансированный подход</span>
+                        </button>
+                        <button class="risk-btn" data-risk="aggressive">
+                            <span class="risk-title">Агрессивная</span>
+                            <span class="risk-desc">Высокий риск и доходность</span>
+                        </button>
+                    </div>
+                     <div class="button-group-vertical">
+                        <button id="confirm-risk-btn" class="btn btn-main">Начать сборку портфеля</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-right">
+                <div class="chart-container">
+                    <h3 class="chart-title">Прогноз роста ваших инвестиций</h3>
+                    <div id="chart-legend" class="chart-legend">
+                        <div class="legend-item"><span class="legend-color green"></span>Макс. доход</div>
+                        <div class="legend-item"><span class="legend-color white"></span>Сред. доход</div>
+                        <div class="legend-item"><span class="legend-color red"></span>Мин. доход</div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="investment-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ИЗМЕНЕНИЕ: Добавляем URL бэкенда прямо в HTML -->
+    <script>
+        // Эта переменная определяет базовый URL для API-запросов.
+        // Она должна совпадать с вашим URL-адресом ngrok из файла config.py.
+        window.WEB_APP_BASE_URL = "https://grand-hartford-drugs-wrapping.trycloudflare.com/";
+    </script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/script.js" type="module"></script>
+    <script src="js/auto-selection.js" type="module"></script>
+</body>
+</html>
