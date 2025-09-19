@@ -1,36 +1,51 @@
 import { trackEvent } from './script.js';
 
-// Ждем, пока вся страница загрузится
 document.addEventListener('DOMContentLoaded', () => {
-    // --- НОВЫЙ КОД ДЛЯ POPUP ---
-    const introPopup = document.getElementById('intro-popup');
+    trackEvent('page_view_main');
 
-    // Показываем попап, если его еще не видели
-    if (!localStorage.getItem('hasSeenIntroPopup')) {
-        showIntroPopup();
-    }
-    
-    // Назначаем обработчики для закрытия попапа
-    if (introPopup) {
-        introPopup.addEventListener('click', (e) => {
-            if (e.target === introPopup || e.target.closest('#intro-popup-close, #intro-popup-confirm')) {
-                hideIntroPopup();
+    // Назначаем обработчики на карточки с целями
+    document.querySelectorAll('.goal-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const goal = card.dataset.goal;
+            if (goal) {
+                // --- НОВОЕ: Отслеживаем клик по карточке цели ---
+                // Это событие фиксирует первоначальный интерес пользователя к цели.
+                trackEvent('click_goal_card', { goal });
+                
+                // Открываем соответствующий pop-up
+                showGoalPopup(goal);
             }
         });
-    }
-    // --- КОНЕЦ НОВОГО КОДА ---
+    });
 
+    // Назначаем обработчики на кнопки подтверждения внутри pop-up'ов
+    document.querySelectorAll('.goal-popup').forEach(popup => {
+        const confirmBtn = popup.querySelector('.popup-confirm-btn');
+        const goal = popup.id.replace('-popup', '');
 
-    const autoSelectionBtn = document.getElementById('auto-selection-btn');
-    const demoPortfolioBtn = document.getElementById('demo-portfolio-btn');
-
-    if (autoSelectionBtn) {
-        autoSelectionBtn.addEventListener('click', () => {
-            trackEvent('click_auto_selection');
-            window.location.href = 'auto-selection.html';
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Сохраняем выбранную цель
+                localStorage.setItem('selectedGoal', goal);
+                // Это событие отслеживает уже подтвержденный выбор цели
+                trackEvent('select_goal_on_main', { goal: goal });
+                // Переходим на страницу автоподбора
+                window.location.href = confirmBtn.href;
+            });
+        }
+        
+        // Обработчик для закрытия pop-up'а
+        popup.addEventListener('click', (e) => {
+            if (e.target === popup || e.target.classList.contains('popup-close')) {
+                hideGoalPopup(goal);
+            }
         });
-    }
+    });
 
+
+    // Назначаем обработчик на кнопку "Демо-портфель"
+    const demoPortfolioBtn = document.getElementById('demo-portfolio-btn');
     if (demoPortfolioBtn) {
         demoPortfolioBtn.addEventListener('click', () => {
             trackEvent('click_demo_portfolio');
@@ -39,16 +54,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- НОВЫЕ ФУНКЦИИ ДЛЯ УПРАВЛЕНИЯ POPUP ---
-function showIntroPopup() {
-    const popup = document.getElementById('intro-popup');
-    if (popup) popup.classList.add('active');
+// --- ФУНКЦИИ ДЛЯ УПРАВЛЕНИЯ POPUP ---
+function showGoalPopup(goal) {
+    const popup = document.getElementById(`${goal}-popup`);
+    if (popup) {
+        popup.classList.add('active');
+    }
 }
 
-function hideIntroPopup() {
-    const popup = document.getElementById('intro-popup');
-    if (popup) popup.classList.remove('active');
-    // Устанавливаем флаг, чтобы больше не показывать
-    localStorage.setItem('hasSeenIntroPopup', 'true');
+function hideGoalPopup(goal) {
+    const popup = document.getElementById(`${goal}-popup`);
+    if (popup) {
+        popup.classList.remove('active');
+    }
 }
-

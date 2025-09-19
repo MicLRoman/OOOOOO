@@ -4,55 +4,82 @@
     gap: 2rem;
     width: 100%;
     align-items: center;
-    /* Заставляем сетку занимать всю высоту видимой области */
     min-height: calc(100vh - 4rem); 
 }
 
 .panel {
     display: flex;
     flex-direction: column;
-    height: 100%; /* Панели растягиваются на всю высоту ячейки грида */
+    height: 100%;
 }
 
 .loading-panel {
     text-align: center;
-    justify-content: center; /* Центрируем контент по вертикали */
+    justify-content: center;
     gap: 1.5rem;
 }
 
+/* --- ИЗМЕНЕНИЯ: Стили для контейнера спиннера и таймера --- */
 .spinner-container {
-    margin: 2.5rem 0;
+    margin: 2.5rem auto;
+    position: relative;
+    width: 120px;
+    height: 120px;
 }
 
 .spinner {
-    width: 60px;
-    height: 60px;
-    border: 4px solid #333333;
+    width: 70px;
+    height: 70px;
+    border: 5px solid #333333;
     border-top-color: #dc2626;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin: 0 auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
+
+.timer-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg); /* Начинаем анимацию сверху */
+}
+
+.timer-track {
+    fill: none;
+    stroke: #1c1c1d;
+    stroke-width: 8;
+}
+
+.timer-progress {
+    fill: none;
+    stroke: #dc2626;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.timer-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #aaaaaa;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+/* -------------------------------------------------------- */
 
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
 
 .progress-bar-container {
-    width: 100%;
-    height: 8px;
-    background-color: #1c1c1d;
-    border-radius: 4px;
-    overflow: hidden;
-    /* === ИЗМЕНЕНИЕ: Скрываем прогресс-бар === */
     display: none; 
-}
-
-.progress-bar {
-    height: 100%;
-    background-color: #dc2626;
-    width: 0%;
-    transition: width 0.4s ease-out;
 }
 
 .survey-panel {
@@ -60,7 +87,6 @@
     border-radius: 12px;
     padding: 1.5rem;
     gap: 1.5rem;
-    /* === ИЗМЕНЕНИЕ: Добавляем красную рамку и тень для акцента === */
     border: 2px solid #dc2626;
     box-shadow: 0 0 20px rgba(220, 38, 38, 0.25);
 }
@@ -103,12 +129,8 @@
 }
 
 
-/* Адаптивность */
 @media (max-width: 768px) {
     .layout-grid-loading {
         grid-template-columns: 1fr;
     }
-    /* === ИЗМЕНЕНИЕ: Убираем 'order: -1' === */
-    /* Теперь порядок на мобильных будет как на десктопе */
 }
-

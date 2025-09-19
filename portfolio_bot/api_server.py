@@ -33,18 +33,14 @@ def serve_static(path):
     """
     if not os.path.isdir(static_folder_path):
         return "Ошибка: Директория со статическими файлами не найдена.", 500
-    
+
     file_path = os.path.join(static_folder_path, path)
     if not os.path.exists(file_path):
          return f"Файл не найден: {path}", 404
 
-    # --- ИСПРАВЛЕНИЕ ОШИБКИ MIME TYPE ---
-    # Явно указываем правильный MIME-тип для JavaScript файлов,
-    # чтобы браузер не блокировал их загрузку.
     if path.endswith('.js'):
         return send_from_directory(static_folder_path, path, mimetype='application/javascript')
-    
-    # Для всех остальных файлов оставляем автоматическое определение
+
     return send_from_directory(static_folder_path, path)
 
 
@@ -56,12 +52,17 @@ def calculate_portfolio_endpoint():
     try:
         data = request.json
         print(f"Получен API-запрос на /api/calculate: {data}")
-        
+
+        # --- ИЗМЕНЕНИЕ: Добавляем прием monthlyContribution ---
         result = calculator.calculate(
             risk_profile=data.get('riskProfile'),
             amount=int(data.get('amount')),
-            term=int(data.get('term')),
-            selected_funds=data.get('selected_funds')
+            term=data.get('term'), 
+            term_months=data.get('term_months'),
+            selected_funds=data.get('selected_funds'),
+            dreamAmount=data.get('dreamAmount'),
+            passiveIncome=data.get('passiveIncome'),
+            monthly_contribution=int(data.get('monthlyContribution', 0)) # <-- НОВЫЙ ПАРАМЕТР
         )
         return jsonify(result)
 
@@ -84,4 +85,3 @@ def get_all_funds_endpoint():
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)
-

@@ -99,7 +99,7 @@
     background-color: #dc2626;
 }
 
-/* --- Слайдер риска --- */
+/* --- Слайдеры --- */
 .risk-slider-container {
     background-color: #1c1c1d;
     border-radius: 12px;
@@ -115,9 +115,15 @@
     font-size: 1rem;
 }
 
-#risk-level-label {
+#risk-level-label, #term-level-label {
     font-weight: 600;
 }
+
+input[type="range"]:focus {
+    outline: none;
+    box-shadow: none;
+}
+
 
 input[type="range"] {
     -webkit-appearance: none;
@@ -161,7 +167,7 @@ input[type="range"]::-moz-range-thumb {
 .chart-container {
     background-color: #1c1c1d;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 0.7rem;
     margin-bottom: 1.5rem;
 }
 .chart-wrapper {
@@ -178,6 +184,49 @@ input[type="range"]::-moz-range-thumb {
     max-width: 300px;
 }
 
+/* --- НОВЫЕ СТИЛИ: Сводка по цели и переключатель вида --- */
+.goal-summary-card {
+    background-color: #1c1c1d;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    border: 1px solid #333;
+}
+.goal-summary-card p {
+    margin: 0;
+    color: #aaaaaa;
+    line-height: 1.6;
+}
+.goal-summary-card strong {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.view-switcher {
+    display: flex;
+    width: 100%;
+    background-color: #1c1c1d;
+    border-radius: 8px;
+    padding: 0.25rem;
+    margin-bottom: 1.5rem;
+}
+.switcher-btn {
+    width: 50%;
+    padding: 0.75rem;
+    border: none;
+    background-color: transparent;
+    color: #aaaaaa;
+    font-size: 1rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.switcher-btn.active {
+    background-color: #333333;
+    color: #ffffff;
+    font-weight: 600;
+}
+
 /* --- Pop-up и модальные окна --- */
 .popup-overlay {
     position: fixed;
@@ -192,7 +241,7 @@ input[type="range"]::-moz-range-thumb {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
-    z-index: 1000;
+    z-index: 9999;
 }
 .popup-overlay.active {
     opacity: 1;
@@ -229,6 +278,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .tutorial-list li {
     margin-bottom: 0.75rem;
+    text-align: left;
 }
 
 .replacement-options-list {
@@ -259,7 +309,69 @@ input[type="range"]::-moz-range-thumb {
     opacity: 0.7;
 }
 
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+}
+
+.legend-item {
+    display: grid;
+    /* Columns: color swatch, label, value, profit */
+    grid-template-columns: 20px 1fr auto auto;
+    gap: 0 0.75rem;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.legend-color {
+    width: 16px;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.legend-label {
+    color: #aaaaaa;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.legend-value {
+    font-weight: 600;
+    color: #ffffff;
+    text-align: right;
+}
+
+.legend-profit {
+    font-weight: 600;
+    min-width: 85px; /* Reserve space to prevent layout shifts */
+    text-align: right;
+    white-space: nowrap;
+}
+
+.legend-profit span.positive {
+    color: #28a745;
+}
+
+.legend-profit span.negative {
+    color: #dc2626;
+}
+
+
 /* Адаптивность */
 @media (max-width: 768px) {
     .assets-list { grid-template-columns: 1fr; }
+}
+
+.spacer {
+    height: 0.2rem;
 }

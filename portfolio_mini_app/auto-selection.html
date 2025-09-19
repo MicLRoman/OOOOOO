@@ -3,95 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Автоподбор</title>
-    <!-- Сначала основные стили, потом стили для этой страницы -->
+    <title>Автоподбор портфеля</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/auto-selection.css">
 </head>
 <body>
 
-    <!-- ОБНОВЛЕНИЕ: Добавляем главный контейнер для отступов -->
     <div class="container">
         <div class="layout-grid">
             <div class="panel-left">
                 <button id="back-btn" class="back-btn" disabled>← Назад</button>
 
-                <!-- ШАГ 1: Сумма -->
-                <div id="step-1" class="step active">
+                <!-- ШАГ 1: ВЫБОР ЦЕЛИ -->
+                <div id="step-goal" class="step active">
+                    <h2 class="step-title">Какая у вас цель?</h2>
+                    <p class="step-subtitle">Выберите, для чего вы хотите инвестировать.</p>
+                    <div class="goal-buttons">
+                        <button class="goal-btn" data-goal="grow">
+                            <span class="goal-title">Приумножить капитал</span>
+                            <span class="goal-desc">Простой способ вложить деньги и получить прогнозируемый доход.</span>
+                        </button>
+                        <button class="goal-btn" data-goal="dream">
+                            <span class="goal-title">Накопить на мечту</span>
+                            <span class="goal-desc">Поможем рассчитать, как достичь конкретной финансовой цели.</span>
+                        </button>
+                        <button class="goal-btn" data-goal="passive">
+                            <span class="goal-title">Создать пассивный доход</span>
+                            <span class="goal-desc">Сформируем капитал, который будет приносить вам доход в будущем.</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- БЛОК ДЛЯ "ПРИУМНОЖИТЬ КАПИТАЛ" -->
+                <div id="step-grow-amount" class="step">
                     <h2 class="step-title">Сумма инвестиций</h2>
                     <div class="input-group">
-                        <label for="amount">Сколько вы готовы вложить?</label>
-                        <input type="number" id="amount" value="50000" min="1000">
+                        <label for="amount-grow">Сколько вы готовы вложить?</label>
+                        <input type="number" id="amount-grow" value="50000" min="1000">
                     </div>
-                    <div class="button-group-vertical">
-                        <button id="confirm-amount-btn" class="btn btn-main">Подтвердить</button>
-                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
                 </div>
-
-                <!-- ШАГ 2: Срок -->
-                <div id="step-2" class="step">
+                <div id="step-grow-term" class="step">
                     <h2 class="step-title">Срок инвестирования</h2>
                     <div class="slider-group">
-                        <label for="term">Срок: <span id="term-value">5</span> лет</label>
-                        <input type="range" id="term" min="1" max="10" value="5">
-                        <div class="slider-labels">
-                            <span>1 год</span>
-                            <span>10 лет</span>
-                        </div>
+                        <label for="term-grow">Срок: <span id="term-value-grow"></span></label>
+                        <input type="range" id="term-grow" min="1" max="60" value="36">
+                        <div class="slider-labels"><span>1 мес.</span><span>5 лет</span></div>
+                        <p class="slider-hint">На графике отображается базовый сценарий для вашей суммы и срока.</p>
                     </div>
-                    <div class="button-group-vertical">
-                        <button id="confirm-term-btn" class="btn btn-main">Подтвердить</button>
-                        <button id="unknown-term-btn" class="btn btn-secondary">Не знаю</button>
-                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
                 </div>
 
-                <!-- ШАГ 3: Риск-профиль -->
-                <div id="step-3" class="step">
-                    <h2 class="step-title">Выберите стратегию</h2>
+                <!-- БЛОК ДЛЯ "НАКОПИТЬ НА МЕЧТУ" -->
+                <div id="step-dream-target" class="step">
+                    <h2 class="step-title">Ваша мечта</h2>
+                     <div class="input-group">
+                        <label for="amount-dream">Сколько нужно накопить?</label>
+                        <input type="number" id="amount-dream" value="1000000" min="10000">
+                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
+                </div>
+                 <div id="step-dream-initial" class="step">
+                    <h2 class="step-title">Первый шаг</h2>
+                     <div class="input-group">
+                        <label for="initial-amount-dream">Сколько готовы вложить сейчас?</label>
+                        <input type="number" id="initial-amount-dream" value="50000" min="1000">
+                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
+                </div>
+                <div id="step-dream-term" class="step">
+                    <h2 class="step-title">Срок накопления</h2>
+                    <div class="slider-group">
+                        <label for="term-dream">Через сколько: <span id="term-value-dream"></span></label>
+                        <input type="range" id="term-dream" min="1" max="60" value="36">
+                        <div class="slider-labels"><span>1 мес.</span><span>5 лет</span></div>
+                        <p class="slider-hint">На графике отображается базовый сценарий для вашей суммы и срока.</p>
+                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
+                </div>
+
+                <!-- БЛОК ДЛЯ "ПАССИВНЫЙ ДОХОД" (ИЗМЕНЕН ПОРЯДОК) -->
+                 <div id="step-passive-initial" class="step">
+                    <h2 class="step-title">Первый шаг</h2>
+                    <div class="input-group">
+                        <label for="initial-amount-passive">Сколько готовы вложить сейчас?</label>
+                        <input type="number" id="initial-amount-passive" value="50000" min="1000">
+                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
+                </div>
+                <div id="step-passive-term" class="step">
+                    <h2 class="step-title">Срок накопления</h2>
+                     <div class="slider-group">
+                        <label for="term-passive">Начать получать через: <span id="term-value-passive"></span></label>
+                        <input type="range" id="term-passive" min="1" max="60" value="60">
+                        <div class="slider-labels"><span>1 мес.</span><span>5 лет</span></div>
+                        <p class="slider-hint">На графике отображается базовый сценарий для вашей суммы и срока.</p>
+                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
+                </div>
+                 <div id="step-passive-income" class="step">
+                    <h2 class="step-title">Пассивный доход <button class="help-btn" id="passive-income-help-btn">?</button></h2>
+                    <div class="input-group">
+                        <label for="income-passive">Какой доход в месяц вы хотите?</label>
+                        <input type="number" id="income-passive" value="50000" min="1000">
+                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
+                </div>
+                
+                <!-- ОБЩИЙ ШАГ: РИСК -->
+                <div id="step-risk" class="step">
+                    <h2 class="step-title">Выберите риск-профиль</h2>
                     <div class="risk-buttons">
                         <button class="risk-btn" data-risk="conservative">
                             <span class="risk-title">Консервативная</span>
-                            <span class="risk-desc">Низкий риск, умеренная доходность</span>
+                            <span class="risk-desc">Низкий риск</span>
                         </button>
                         <button class="risk-btn selected" data-risk="moderate">
                             <span class="risk-title">Умеренная</span>
-                            <span class="risk-desc">Сбалансированный подход</span>
+                            <span class="risk-desc">Баланс</span>
                         </button>
                         <button class="risk-btn" data-risk="aggressive">
                             <span class="risk-title">Агрессивная</span>
-                            <span class="risk-desc">Высокий риск и доходность</span>
+                            <span class="risk-desc">Высокий риск</span>
                         </button>
                     </div>
-                     <div class="button-group-vertical">
-                        <button id="confirm-risk-btn" class="btn btn-main">Начать сборку портфеля</button>
-                    </div>
+                    <button class="btn btn-main next-btn">Далее</button>
                 </div>
+
+                <!-- НОВЫЙ ШАГ: ЕЖЕМЕСЯЧНОЕ ПОПОЛНЕНИЕ -->
+                <div id="step-contribution" class="step">
+                    <h2 class="step-title">Регулярные пополнения</h2>
+                    <div class="slider-group">
+                        <label for="contribution-slider">Сумма в месяц: <span id="contribution-value">0 ₽</span></label>
+                        <!-- ИЗМЕНЕНИЕ: Обновлены параметры слайдера -->
+                        <input type="range" id="contribution-slider" min="0" max="20000" value="0" step="100">
+                        <div class="slider-labels"><span>0 ₽</span><span>20 000 ₽</span></div>
+                        <p class="slider-hint">Регулярные пополнения значительно увеличат ваш итоговый капитал.</p>
+                    </div>
+                    <button id="confirm-contribution-btn" class="btn btn-main">Собрать портфель</button>
+                </div>
+
             </div>
 
             <div class="panel-right">
                 <div class="chart-container">
-                    <h3 class="chart-title">Прогноз роста ваших инвестиций</h3>
-                    <div id="chart-legend" class="chart-legend">
-                        <div class="legend-item"><span class="legend-color green"></span>Макс. доход</div>
-                        <div class="legend-item"><span class="legend-color white"></span>Сред. доход</div>
-                        <div class="legend-item"><span class="legend-color red"></span>Мин. доход</div>
+                    <div id="chart-view-toggle" class="chart-view-toggle hidden">
+                        <button class="toggle-btn active" data-view="capital">Рост капитала</button>
+                        <button class="toggle-btn" data-view="income">Месячный доход</button>
                     </div>
                     <div class="chart-wrapper">
                         <canvas id="investment-chart"></canvas>
                     </div>
+                    <div id="chart-legend" class="chart-legend"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ИЗМЕНЕНИЕ: Добавляем URL бэкенда прямо в HTML -->
-    <script>
-        // Эта переменная определяет базовый URL для API-запросов.
-        // Она должна совпадать с вашим URL-адресом ngrok из файла config.py.
-        window.WEB_APP_BASE_URL = "https://oooooo-q7ete6l6t-mishashegoleh-2041s-projects.vercel.app/";
-    </script>
+    <div id="passive-income-info-popup" class="popup-overlay">
+        <div class="popup-content">
+            <button class="popup-close">&times;</button>
+            <h3>Как мы считаем ваш пассивный доход?</h3>
+            <p>Этот прогноз показывает, какую сумму вы сможете ежемесячно получать, если по окончании срока вложения переведете весь накопленный капитал в надежные инструменты (например, вклады или облигации).</p>
+            <p>Для расчета мы используем ориентировочную ставку, близкую к ключевой ставке ЦБ РФ.</p>
+            <button class="btn btn-main" id="close-passive-popup-btn">Понятно</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="js/script.js" type="module"></script>
     <script src="js/auto-selection.js" type="module"></script>
 </body>
 </html>
+

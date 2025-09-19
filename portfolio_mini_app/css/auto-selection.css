@@ -7,7 +7,6 @@
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    /* Убираем padding, т.к. он теперь в .container */
     align-items: flex-start;
 }
 
@@ -57,8 +56,15 @@
 .step-title {
     font-size: 1.75rem;
     font-weight: 600;
+    margin-bottom: 0;
+}
+.step-subtitle {
+    font-size: 1rem;
+    color: #aaaaaa;
+    margin-top: -1rem; /* Поднимаем подзаголовок ближе к заголовку */
     margin-bottom: 0.5rem;
 }
+
 
 .input-group, .slider-group {
     display: flex;
@@ -86,11 +92,10 @@
     border-color: #dc2626;
 }
 
-.button-group-vertical {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+.step > .btn-main {
+    margin-top: 0.5rem;
 }
+
 
 .slider-group input[type="range"] {
     -webkit-appearance: none;
@@ -100,7 +105,7 @@
     background: #333333;
     border-radius: 3px;
     outline: none;
-    margin-top: 0.5rem; /* Добавляем отступ сверху */
+    margin-top: 0.5rem;
 }
 
 .slider-group input[type="range"]::-webkit-slider-thumb {
@@ -127,6 +132,54 @@
     font-size: 0.8rem;
     color: #aaaaaa;
 }
+
+.slider-note {
+    font-size: 0.8rem;
+    color: #aaaaaa;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.goal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.goal-btn {
+    padding: 1rem;
+    background-color: #1c1c1d;
+    border: 2px solid #333333;
+    border-radius: 8px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.goal-btn:hover {
+    border-color: #dc2626;
+    background-color: rgba(220, 38, 38, 0.1);
+}
+.goal-btn img {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+.goal-title {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
+}
+.goal-desc {
+    font-size: 0.85rem;
+    color: #aaaaaa;
+}
+
 
 .risk-buttons {
     display: grid;
@@ -171,50 +224,95 @@
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
+    gap: 1rem; 
 }
 
-.chart-title {
-    text-align: center;
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
+.chart-view-toggle {
+    display: flex;
+    width: 100%;
+    background-color: #111111;
+    border-radius: 8px;
+    padding: 0.25rem;
+}
+.chart-view-toggle.hidden {
+    display: none;
+}
+.toggle-btn {
+    width: 50%;
+    padding: 0.5rem;
+    border: none;
+    background-color: transparent;
     color: #aaaaaa;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.toggle-btn.active {
+    background-color: #333333;
+    color: #ffffff;
+    font-weight: 600;
 }
 
-/* Ограничиваем максимальную высоту, чтобы график не растягивался */
+
 .chart-wrapper {
     position: relative;
-    max-height: 350px;
+    height: 300px;
     width: 100%;
 }
 
 .chart-legend {
     display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.chart-legend.visible {
-    opacity: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
 }
 
 .legend-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: 20px 1fr auto auto;
+    gap: 0 0.75rem;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
 }
 
 .legend-color {
-    width: 10px;
-    height: 10px;
+    width: 16px;
+    height: 4px;
     border-radius: 2px;
 }
-.legend-color.green { background-color: #28a745; }
-.legend-color.white { background-color: #f8f9fa; }
-.legend-color.red   { background-color: #dc3545; }
+
+.legend-color[style*="dashed"] {
+    background-color: transparent !important;
+    height: 0;
+}
+
+.legend-label {
+    color: #aaaaaa;
+    text-align: left;
+}
+
+.legend-value {
+    font-weight: 600;
+    color: #ffffff;
+    text-align: right;
+}
+
+.legend-profit {
+    font-weight: 600;
+    min-width: 80px;
+    text-align: right;
+}
+
+.legend-profit .gain {
+    color: #28a745;
+}
+
+.legend-profit .loss {
+    color: #dc2626;
+}
 
 
 @media (max-width: 768px) {
@@ -226,6 +324,9 @@
     .panel-right {
         position: static;
     }
+    
+    .panel-left {
+        padding: 0 1rem;
+    }
 }
-
 

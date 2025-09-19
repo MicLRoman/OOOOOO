@@ -13,19 +13,20 @@
         <div class="layout-grid-loading">
             <!-- Левая панель с анимацией -->
             <div class="panel loading-panel">
-                <h2 class="step-title">Формируем шаблонный портфель</h2>
-                <p>Создаем персональный портфель, от которого вы сможете оттолкнуться.</p>
+                <h2 class="step-title">Формируем ваш портфель</h2>
+                <p>Подбираем активы и рассчитываем прогноз. Обычно это занимает не больше минуты.</p>
                 <div class="spinner-container">
-                    <div class="spinner"></div>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="progress-bar"></div>
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-track" cx="50" cy="50" r="45"></circle>
+                        <circle class="timer-progress" id="timer-progress" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="timer-text" id="timer-text"></div>
                 </div>
             </div>
 
             <!-- Правая панель с опросом -->
             <div class="panel survey-panel">
-                <h3 class="survey-title">Пока портфель формируется, пройдите короткий опрос:</h3>
+                <h3 class="survey-title">Пока мы считаем, пройдите короткий опрос:</h3>
                 
                 <div class="question">
                     <label>Возраст:</label>
@@ -43,6 +44,16 @@
                         <label><input type="radio" name="experience" value="none"> Не инвестировал</label>
                         <label><input type="radio" name="experience" value="tried"> Пробовал(а), но не понимаю</label>
                         <label><input type="radio" name="experience" value="basic"> Имею базовые представления</label>
+                    </div>
+                </div>
+
+                <!-- ИЗМЕНЕННЫЙ ВОПРОС -->
+                <div class="question">
+                    <label>Что бы вы предпочли?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="psychotype" value="guaranteed"> Гарантированно заработать 5 000 ₽</label>
+                        <label><input type="radio" name="psychotype" value="balanced"> С высокой вероятностью получить 8 000 ₽, но есть небольшой риск ничего не получить</label>
+                        <label><input type="radio" name="psychotype" value="risky"> С 50% шансом заработать 15 000 ₽ (и 50% шансом не получить ничего)</label>
                     </div>
                 </div>
 
@@ -66,4 +77,3 @@
 
 </body>
 </html>
-

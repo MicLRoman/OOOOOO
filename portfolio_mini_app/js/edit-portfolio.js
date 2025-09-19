@@ -2,37 +2,47 @@ import { trackEvent } from './script.js';
 
 // --- Глобальное состояние и константы ---
 let currentPortfolio = null;
-let allFundsCache = null; 
+let investmentData = null; 
+let allFundsCache = null;
 let isRecalculating = false;
 let portfolioChartInstance = null;
+let currentChartView = 'capital'; 
 const tg = window.Telegram.WebApp;
 const API_URL_CALCULATE = `${window.location.origin}/api/calculate`;
 const API_URL_FUNDS = `${window.location.origin}/api/funds`;
 
+function formatTerm(months) {
+    months = parseInt(months, 10);
+    let monthText;
+    if (months % 10 === 1 && months % 100 !== 11) monthText = 'месяц';
+    else if ([2, 3, 4].includes(months % 10) && ![12, 13, 14].includes(months % 100)) monthText = 'месяца';
+    else monthText = 'месяцев';
+    const years = (months / 12).toFixed(1);
+    const formattedYears = years.endsWith('.0') ? years.slice(0, -2) : years;
+    return `${months} ${monthText} (~${formattedYears} г.)`;
+}
+
 // --- Инициализация ---
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("▶️ DOMContentLoaded: Редактор портфеля начинает инициализацию.");
     trackEvent('page_view_edit_portfolio');
     tg.MainButton.hide();
     document.body.innerHTML = '<div class="loading-indicator">Загружаем редактор...</div>';
 
     try {
+        investmentData = JSON.parse(localStorage.getItem('investmentData'));
         const storedPortfolio = JSON.parse(localStorage.getItem('calculatedPortfolio'));
-        if (!storedPortfolio) throw new Error("Рассчитанный портфель не найден в localStorage.");
-        console.log("✅ Портфель загружен из localStorage:", storedPortfolio);
         
+        if (!investmentData || !storedPortfolio) throw new Error("Данные не найдены.");
+
         currentPortfolio = storedPortfolio;
-        await fetchAllFunds(); // Загружаем и кэшируем все доступные фонды
+        currentPortfolio.term_months = currentPortfolio.term_months || currentPortfolio.term * 12;
+        currentPortfolio.monthly_contribution = currentPortfolio.monthly_contribution || 0;
+        investmentData.monthlyContribution = investmentData.monthlyContribution || 0;
 
-        renderPage(); // Отрисовываем HTML
-        initializePageLogic(); // Настраиваем всю логику
 
-        // Показываем обучалку при первом заходе
-        if (!localStorage.getItem('hasSeenEditTutorial')) {
-            console.log("ℹ️ Первый визит, показываем обучение.");
-            showTutorial();
-        }
-
+        await fetchAllFunds();
+        renderPage(); 
+        if (!localStorage.getItem('hasSeenEditTutorial')) showTutorial();
     } catch (error) {
         console.error("❌ Ошибка инициализации редактора:", error);
         document.body.innerHTML = `<div class="error-message">${error.message}<br><a href="auto-selection.html">Начать заново</a></div>`;
@@ -41,25 +51,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 // --- Функции отрисовки и UI ---
-
 function renderPage() {
-    console.log("🎨 Начинаем отрисовку страницы (renderPage).");
     document.body.innerHTML = `
     <div class="container">
         <div class="edit-header">
-            <h1 class="page-title">Настройка портфеля</h1>
-            <p class="page-subtitle">Отрегулируйте риск и замените активы, чтобы создать идеальный портфель для себя.</p>
+            <h1 class="page-title">Настройка портфеля <button class="help-btn" id="edit-tutorial-help-btn">?</button></h1>
+            <p class="page-subtitle">Отрегулируйте параметры, чтобы достичь своей цели.</p>
         </div>
         <details class="portfolio-card-toggle" id="portfolio-details" open>
             <summary class="portfolio-card-header">
                 <div class="summary-main">
                     <h3 id="portfolio-strategy-title"></h3>
-                    <div class="summary-details">
-                        <span><span id="portfolio-amount"></span> ₽ • <span id="portfolio-term"></span> лет</span>
-                        <div class="guaranteed-return-summary">
-                            Гарант. доход: (нижняя планка)<strong id="edit-guaranteed-return"></strong>
-                        </div>
-                    </div>
+                    <div class="summary-details" id="summary-details"></div>
                 </div>
                 <span class="toggle-icon">▼</span>
             </summary>
@@ -68,7 +71,19 @@ function renderPage() {
                 <div class="assets-list" id="assets-list"></div>
             </div>
         </details>
-        <div class="risk-slider-container" id="risk-slider-section">
+        
+        
+        <!-- СЛАЙДЕР ЕЖЕМЕСЯЧНОГО ПОПОЛНЕНИЯ -->
+        <div class="risk-slider-container">
+            <div class="slider-header">
+                <label for="contribution-slider">Ежемесячное пополнение</label>
+                <span id="contribution-level-label">0 ₽</span>
+            </div>
+            <input type="range" id="contribution-slider" min="0" max="20000" step="100" value="0">
+            <div class="slider-labels"><span>0 ₽</span><span>20 000 ₽</span></div>
+        </div>
+
+        <div class="risk-slider-container">
             <div class="slider-header">
                 <label for="risk-slider">Уровень риска</label>
                 <span id="risk-level-label"></span>
@@ -76,28 +91,41 @@ function renderPage() {
             <input type="range" id="risk-slider" min="0" max="100" value="50">
             <div class="slider-labels"><span>Мин. риск</span><span>Выс. риск</span></div>
         </div>
+        <div class="risk-slider-container">
+            <div class="slider-header">
+                <label for="term-slider">Срок инвестирования</label>
+                <span id="term-level-label"></span>
+            </div>
+            <input type="range" id="term-slider" min="1" max="60" value="36">
+            <div class="slider-labels"><span>1 мес.</span><span>5 лет</span></div>
+        </div>
+
+        <div id="goal-summary-card-container"></div>
+        <div id="chart-view-switcher-container"></div>
+        <div class="spacer"></div>
+        
         <div class="chart-container">
             <div class="chart-wrapper"><canvas id="performance-chart"></canvas></div>
+            <div id="chart-legend" class="chart-legend"></div>
         </div>
         <div class="action-buttons">
             <button class="btn btn-secondary" id="reset-btn">Сбросить</button>
             <button class="btn btn-main" id="save-btn">Сохранить</button>
         </div>
     </div>
-    <!-- Обучающий Pop-up -->
+    <!-- Pop-up'ы -->
     <div id="tutorial-popup" class="popup-overlay">
         <div class="popup-content">
             <button class="popup-close" id="popup-close-tutorial">&times;</button>
             <h3>Добро пожаловать в редактор!</h3>
             <p>Здесь вы можете тонко настроить ваш портфель.</p>
             <ul class="tutorial-list">
-                <li>Используйте <strong>слайдер риска</strong>, чтобы изменить потенциальную доходность и риск портфеля.</li>
-                <li>Внутри карточки портфеля вы можете <strong>заменить один актив на другой</strong> из той же категории.</li>
+                <li>Используйте <strong>слайдеры</strong>, чтобы видеть, как меняется прогноз.</li>
+                <li>Внутри карточки портфеля вы можете <strong>заменить один актив на другой</strong>.</li>
             </ul>
             <button class="btn btn-main" id="start-tutorial-btn">Понятно</button>
         </div>
     </div>
-    <!-- Модальное окно для замены активов -->
     <div id="replace-asset-popup" class="popup-overlay">
         <div class="popup-content">
             <button class="popup-close" id="close-replace-popup">&times;</button>
@@ -105,34 +133,96 @@ function renderPage() {
             <div id="replacement-options" class="replacement-options-list"></div>
         </div>
     </div>`;
-    console.log("✅ Страница отрисована.");
-}
 
-function initializePageLogic() {
-    console.log("⚙️ Инициализация логики страницы (initializePageLogic).");
-    displayPortfolioInfo();
     initializeChart();
     setupEventListeners();
+    updateUIFromPortfolio(); 
 }
 
-function displayPortfolioInfo() {
-    console.log("ℹ️ Отображаем информацию о портфеле (displayPortfolioInfo).");
-    document.getElementById('portfolio-amount').textContent = currentPortfolio.initial_amount.toLocaleString('ru-RU');
-    document.getElementById('portfolio-term').textContent = currentPortfolio.term;
-    
-    // --- НОВЫЙ КОД ---
-    const forecast = currentPortfolio.forecast;
-    const guaranteedReturn = forecast.min[forecast.min.length - 1] - currentPortfolio.initial_amount;
-    document.getElementById('edit-guaranteed-return').textContent = `+${guaranteedReturn.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ₽`;
-    // --- КОНЕЦ НОВОГО КОДА ---
-
-    document.getElementById('risk-slider').value = riskProfileToSliderValue(currentPortfolio.riskProfile);
-    updateRiskUI();
+function updateUIFromPortfolio() {
+    updateCardDetails();
+    updateGoalSummaryCard();
+    updateChartViewSwitcher();
+    updateContributionSlider();
+    updateRiskSlider();
+    updateTermSlider();
     renderAssets();
+    updateChart();
+}
+
+function updateCardDetails() {
+    const termInMonths = currentPortfolio.term_months;
+    const contribution = currentPortfolio.monthly_contribution || 0;
+    document.getElementById('portfolio-strategy-title').textContent = currentPortfolio.strategy_name;
+    let detailsHtml = `<span>${currentPortfolio.initial_amount.toLocaleString('ru-RU')} ₽ • ${formatTerm(termInMonths)}</span>`;
+    if (contribution > 0) {
+        detailsHtml += `<span> • ${contribution.toLocaleString('ru-RU')} ₽/мес.</span>`;
+    }
+    document.getElementById('summary-details').innerHTML = detailsHtml;
+}
+
+function updateGoalSummaryCard() {
+    const container = document.getElementById('goal-summary-card-container');
+    const finalCapitalAvg = currentPortfolio.forecast.avg[currentPortfolio.forecast.avg.length - 1];
+    const termText = formatTerm(currentPortfolio.term_months);
+    let goalSpecificInfoHtml = '';
+
+    if (investmentData.goal === 'passive') {
+        const finalIncome = currentPortfolio.monthly_income_forecast[currentPortfolio.monthly_income_forecast.length - 1];
+        goalSpecificInfoHtml = `<div class="goal-summary-card"><p>Прогноз капитала, согласно серднему, наиболее вероятному сценарию, через <strong>${termText}</strong> составит ~<strong>${Math.round(finalCapitalAvg).toLocaleString('ru-RU')} ₽</strong></p><p>Это позволит получать пассивный доход <strong>~${Math.round(finalIncome).toLocaleString('ru-RU')} ₽</strong> в месяц.</p></div>`;
+    } else if (investmentData.goal === 'dream') {
+        const dreamAmount = investmentData.dreamAmount;
+        const isGoalReached = finalCapitalAvg >= dreamAmount;
+        const statusText = isGoalReached ? `Согласно серднему, наиболее вероятному сценарию, прогнозу, вы <strong>достигнете своей цели</strong>.` : `Согласно серднему, наиболее вероятному сценарию, прогнозу, для достижения цели вам может не хватить ~<strong>${Math.round(dreamAmount - finalCapitalAvg).toLocaleString('ru-RU')} ₽</strong>.`;
+        goalSpecificInfoHtml = `<div class="goal-summary-card"><p>Ваша цель — накопить <strong>${dreamAmount.toLocaleString('ru-RU')} ₽</strong> за <strong>${termText}</strong>. ${statusText}</p></div>`;
+    } else if (investmentData.goal === 'grow') {
+        const profit = finalCapitalAvg - (currentPortfolio.initial_amount + (currentPortfolio.monthly_contribution * currentPortfolio.term_months));
+        goalSpecificInfoHtml = `<div class="goal-summary-card"><p>Через <strong>${termText}</strong> ваш капитал может вырасти до ~<strong>${Math.round(finalCapitalAvg).toLocaleString('ru-RU')} ₽</strong> (<strong>+${Math.round(profit).toLocaleString('ru-RU')} ₽</strong>).</p></div>`;
+    }
+    container.innerHTML = goalSpecificInfoHtml;
+}
+
+function updateChartViewSwitcher() {
+    const container = document.getElementById('chart-view-switcher-container');
+    if (investmentData.goal === 'passive') {
+        container.innerHTML = `
+            <div class="view-switcher" id="edit-chart-switcher">
+                <button class="switcher-btn ${currentChartView === 'capital' ? 'active' : ''}" data-view="capital">Рост капитала</button>
+                <button class="switcher-btn ${currentChartView === 'income' ? 'active' : ''}" data-view="income">Месячный доход</button>
+            </div>`;
+        
+        document.getElementById('edit-chart-switcher').addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                currentChartView = e.target.dataset.view;
+                trackEvent('switch_chart_view_edit', { view: currentChartView });
+                updateUIFromPortfolio();
+            }
+        });
+    } else {
+        container.innerHTML = '';
+    }
+}
+
+function updateContributionSlider() {
+    const slider = document.getElementById('contribution-slider');
+    const value = currentPortfolio.monthly_contribution || 0;
+    slider.value = value;
+    document.getElementById('contribution-level-label').textContent = `${value.toLocaleString('ru-RU')} ₽`;
+}
+
+function updateRiskSlider() {
+    const slider = document.getElementById('risk-slider');
+    slider.value = riskProfileToSliderValue(currentPortfolio.riskProfile);
+    document.getElementById('risk-level-label').textContent = sliderValueToRiskProfile(slider.value).label;
+}
+
+function updateTermSlider() {
+    const slider = document.getElementById('term-slider');
+    slider.value = currentPortfolio.term_months; 
+    document.getElementById('term-level-label').textContent = formatTerm(currentPortfolio.term_months);
 }
 
 function renderAssets() {
-    console.log("📝 Отрисовка списка активов (renderAssets).");
     const assetsListContainer = document.getElementById('assets-list');
     assetsListContainer.innerHTML = '';
     currentPortfolio.composition.forEach(asset => {
@@ -151,118 +241,138 @@ function renderAssets() {
 }
 
 function setupEventListeners() {
-    console.log("🔗 Назначаем обработчики событий (setupEventListeners).");
-    document.getElementById('risk-slider').addEventListener('input', handleRiskSliderChange);
+    const contributionSlider = document.getElementById('contribution-slider');
+    contributionSlider.addEventListener('input', () => {
+        document.getElementById('contribution-level-label').textContent = `${parseInt(contributionSlider.value).toLocaleString('ru-RU')} ₽`;
+    });
+    contributionSlider.addEventListener('change', handleContributionSliderChange);
+
+    document.getElementById('risk-slider').addEventListener('change', handleRiskSliderChange);
+    document.getElementById('risk-slider').addEventListener('input', () => {
+         document.getElementById('risk-level-label').textContent = sliderValueToRiskProfile(document.getElementById('risk-slider').value).label;
+    });
+    
+    document.getElementById('edit-tutorial-help-btn').addEventListener('click', showTutorial);
     document.getElementById('reset-btn').addEventListener('click', handleReset);
     document.getElementById('save-btn').addEventListener('click', handleSave);
 
-    const tutorialPopup = document.getElementById('tutorial-popup');
-    tutorialPopup.addEventListener('click', e => {
-        if (e.target === tutorialPopup || e.target.id === 'popup-close-tutorial' || e.target.id === 'start-tutorial-btn') {
+    document.getElementById('tutorial-popup').addEventListener('click', e => {
+        if (e.target.matches('#tutorial-popup, #popup-close-tutorial, #start-tutorial-btn')) {
             hideTutorial();
         }
     });
 
-    const replacePopup = document.getElementById('replace-asset-popup');
-    replacePopup.addEventListener('click', e => {
-        if (e.target === replacePopup || e.target.id === 'close-replace-popup') {
-            replacePopup.classList.remove('active');
+    document.getElementById('replace-asset-popup').addEventListener('click', e => {
+        if (e.target.matches('#replace-asset-popup, #close-replace-popup')) {
+            e.currentTarget.classList.remove('active');
         }
+    });
+    
+    const termSlider = document.getElementById('term-slider');
+    termSlider.addEventListener('change', handleTermSliderChange);
+    termSlider.addEventListener('input', () => {
+        document.getElementById('term-level-label').textContent = formatTerm(termSlider.value);
     });
 }
 
-// --- Обработчики событий ---
-
-async function handleRiskSliderChange() {
-    if (isRecalculating) return;
-    updateRiskUI();
-    const { riskProfile } = sliderValueToRiskProfile(document.getElementById('risk-slider').value);
-    if (riskProfile !== currentPortfolio.riskProfile) {
-        console.log(`🎚️ Слайдер риска изменен. Новый профиль: ${riskProfile}`);
-        trackEvent('risk_slider_used', { newRisk: riskProfile });
-        await recalculatePortfolio({ riskProfile });
+async function handleContributionSliderChange() {
+    const contribution = parseInt(document.getElementById('contribution-slider').value, 10);
+    if (contribution !== (currentPortfolio.monthly_contribution || 0) ) {
+        trackEvent('contribution_slider_used', { newContribution: contribution });
+        await recalculatePortfolio();
     }
 }
 
-async function handleReplaceAsset(newFundName, oldFundName) {
-    console.log(`🔄 Замена актива: с '${oldFundName}' на '${newFundName}'`);
-    trackEvent('asset_replaced', { from: oldFundName, to: newFundName });
-    const newFundNames = currentPortfolio.composition.map(asset => 
-        asset.fund_name === oldFundName ? newFundName : asset.fund_name
-    );
-    await recalculatePortfolio({ selected_funds: newFundNames });
-    document.getElementById('replace-asset-popup').classList.remove('active');
+async function handleRiskSliderChange() {
+    const riskProfile = sliderValueToRiskProfile(document.getElementById('risk-slider').value).riskProfile;
+    if (riskProfile !== currentPortfolio.riskProfile) {
+        trackEvent('risk_slider_used', { newRisk: riskProfile });
+        await recalculatePortfolio();
+    }
+}
+
+async function handleTermSliderChange() {
+    const termInMonths = document.getElementById('term-slider').value;
+    if (termInMonths != currentPortfolio.term_months) {
+        trackEvent('term_slider_used', { newTermMonths: termInMonths });
+        await recalculatePortfolio();
+    }
 }
 
 function handleReset() {
-    console.log("🔄 Сброс изменений в портфеле.");
     trackEvent('click_reset_portfolio_edit');
     currentPortfolio = JSON.parse(localStorage.getItem('calculatedPortfolio'));
-    displayPortfolioInfo();
-    updateChart();
+    currentPortfolio.term_months = currentPortfolio.term_months || currentPortfolio.term * 12;
+    currentPortfolio.monthly_contribution = currentPortfolio.monthly_contribution || 0;
+    updateUIFromPortfolio();
     tg.HapticFeedback.impactOccurred('light');
 }
 
 function handleSave() {
-    console.log("💾 Сохранение портфеля и переход на portfolio.html.");
     trackEvent('click_save_portfolio_edit');
+    investmentData.term_months = currentPortfolio.term_months;
+    investmentData.term = Math.round(currentPortfolio.term_months / 12);
+    investmentData.monthlyContribution = currentPortfolio.monthly_contribution;
+    localStorage.setItem('investmentData', JSON.stringify(investmentData));
     localStorage.setItem('calculatedPortfolio', JSON.stringify(currentPortfolio));
     tg.HapticFeedback.notificationOccurred('success');
     window.location.href = 'portfolio.html';
 }
 
-// --- Логика API и перерасчета ---
-
 async function fetchAllFunds() {
     if (!allFundsCache) {
-        console.log("🌐 Запрашиваем список всех фондов с сервера...");
         const response = await fetch(API_URL_FUNDS);
         if (!response.ok) throw new Error("Не удалось загрузить список фондов.");
         allFundsCache = await response.json();
-        console.log("✅ Список фондов получен и закэширован:", allFundsCache);
     }
 }
 
-async function recalculatePortfolio({ riskProfile = currentPortfolio.riskProfile, selected_funds = null }) {
-    console.log("⏳ Начинаем перерасчет портфеля...", { riskProfile, selected_funds });
+async function recalculatePortfolio({ selected_funds = null } = {}) {
+    if (isRecalculating) return;
     isRecalculating = true;
     document.querySelector('.container').style.opacity = '0.5';
+
     try {
+        const riskProfile = sliderValueToRiskProfile(document.getElementById('risk-slider').value).riskProfile;
+        const termInMonths = parseInt(document.getElementById('term-slider').value, 10);
+        const monthlyContribution = parseInt(document.getElementById('contribution-slider').value, 10);
+
         const response = await fetch(API_URL_CALCULATE, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 riskProfile,
-                amount: currentPortfolio.initial_amount,
-                term: currentPortfolio.term,
-                selected_funds
+                term_months: termInMonths,
+                amount: investmentData.amount,
+                dreamAmount: investmentData.dreamAmount,
+                passiveIncome: investmentData.passiveIncome,
+                monthlyContribution: monthlyContribution,
+                selected_funds: selected_funds || currentPortfolio.composition.map(f => f.fund_name)
             })
         });
         if (!response.ok) throw new Error("Ошибка при перерасчете портфеля.");
-        currentPortfolio = await response.json();
-        console.log("✅ Портфель успешно пересчитан:", currentPortfolio);
-        displayPortfolioInfo();
-        updateChart();
+        
+        const newPortfolioData = await response.json();
+        
+        currentPortfolio = { ...currentPortfolio, ...newPortfolioData };
+        currentPortfolio.riskProfile = riskProfile;
+        
+        updateUIFromPortfolio();
+
     } catch (error) {
         console.error("❌ Ошибка перерасчета:", error);
-        tg.showAlert(error.message);
+        tg.showAlert(error.message || "Не удалось выполнить перерасчет.");
     } finally {
         isRecalculating = false;
         document.querySelector('.container').style.opacity = '1';
     }
 }
 
-// --- Логика попапов ---
-
 function openReplacePopup(fundNameToReplace) {
-    console.log(`↕️ Открываем попап для замены актива '${fundNameToReplace}'`);
     const popup = document.getElementById('replace-asset-popup');
     const optionsContainer = document.getElementById('replacement-options');
     const currentFund = allFundsCache.find(f => f.name === fundNameToReplace);
-    if (!currentFund) {
-        console.error(`Не удалось найти фонд '${fundNameToReplace}' в кэше.`);
-        return;
-    }
+    if (!currentFund) return;
 
     const replacementOptions = allFundsCache.filter(f => f.risk_level === currentFund.risk_level);
     
@@ -284,69 +394,147 @@ function openReplacePopup(fundNameToReplace) {
 }
 
 function showTutorial() {
-    console.log(" TUTORIAL: Показываем.");
     document.getElementById('tutorial-popup').classList.add('active');
-    document.getElementById('risk-slider-section').style.zIndex = '1001';
-    document.getElementById('portfolio-details').style.zIndex = '1001';
 }
 
 function hideTutorial() {
-    console.log(" TUTORIAL: Скрываем.");
     document.getElementById('tutorial-popup').classList.remove('active');
-    document.getElementById('risk-slider-section').style.zIndex = '';
-    document.getElementById('portfolio-details').style.zIndex = '';
     localStorage.setItem('hasSeenEditTutorial', 'true');
 }
 
-// --- Логика графика и хелперы ---
-
 function initializeChart() {
-    console.log("📈 Инициализация графика (initializeChart).");
     const ctx = document.getElementById('performance-chart')?.getContext('2d');
-    if (!ctx) {
-        console.error("❌ Canvas для графика не найден!");
-        return;
-    }
+    if (!ctx) return;
     portfolioChartInstance = new Chart(ctx, {
-        type: 'line', // <-- ИСПРАВЛЕНИЕ: Добавлен тип графика
+        type: 'line', 
         data: {},
         options: {
-            responsive: true,
+            responsive: true, 
             maintainAspectRatio: false,
             scales: {
-                y: { beginAtZero: false, ticks: { callback: value => (value / 1000) + 'k ₽' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
-                x: { title: { display: true, text: 'Годы' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                y: { beginAtZero: false, ticks: { callback: value => (value / 1000) + 'k ₽' } },
+                x: { title: { display: true, text: 'Месяцы' } }
             },
-            plugins: { legend: { display: false } }
-        }
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        },
     });
-    console.log("✅ Экземпляр графика создан.");
-    updateChart();
 }
 
 function updateChart() {
-    if (!portfolioChartInstance) {
-        console.warn("⚠️ Попытка обновить график до его инициализации.");
-        return;
-    }
-    console.log("📊 Обновляем данные графика...", currentPortfolio.forecast);
-    portfolioChartInstance.data = {
-        labels: currentPortfolio.forecast.labels,
-        datasets: [
-            { label: 'Макс.', data: currentPortfolio.forecast.max, borderColor: '#28a745', tension: 0.2 },
-            { label: 'Сред.', data: currentPortfolio.forecast.avg, borderColor: '#f8f9fa', tension: 0.2 },
-            { label: 'Мин.', data: currentPortfolio.forecast.min, borderColor: '#dc3545', tension: 0.2 }
-        ]
-    };
+    if (!portfolioChartInstance) return;
+    const chartData = generateChartData(currentPortfolio, investmentData);
+    portfolioChartInstance.data = chartData.data;
+    portfolioChartInstance.options.scales.y.title.text = chartData.yTitle;
     portfolioChartInstance.update();
-    console.log("✅ График обновлен.");
+    const fullInvestmentData = { 
+        ...investmentData, 
+        amount: currentPortfolio.initial_amount,
+        monthlyContribution: currentPortfolio.monthly_contribution, 
+        term_months: currentPortfolio.term_months 
+    };
+    updateChartLegend(portfolioChartInstance, fullInvestmentData, currentChartView);
 }
 
-function updateRiskUI() {
-    const sliderValue = document.getElementById('risk-slider').value;
-    const { label } = sliderValueToRiskProfile(sliderValue);
-    document.getElementById('risk-level-label').textContent = label;
-    document.getElementById('portfolio-strategy-title').textContent = `${label} портфель`;
+function updateChartLegend(chart, fullInvestmentData, currentChartView) {
+    const legendContainer = document.getElementById('chart-legend');
+    if (!legendContainer) return;
+    const { datasets } = chart.data;
+    let legendHTML = '';
+
+    datasets.forEach(dataset => {
+        const meta = chart.getDatasetMeta(chart.data.datasets.indexOf(dataset));
+        if (meta.hidden || !dataset.data || dataset.data.length === 0) return;
+        
+        const lastValue = dataset.data[dataset.data.length - 1];
+        const color = dataset.borderColor;
+        let labelText = '';
+        let valueText = Math.round(lastValue).toLocaleString('ru-RU') + ' ₽';
+        let profitText = '';
+        let isGoalLine = false;
+
+        switch(dataset.label) {
+            case 'Макс. доход': labelText = 'Макс. доход'; break;
+            case 'Сред. доход': labelText = 'Сред. доход'; break;
+            case 'Мин. доход': labelText = 'Мин. доход'; break;
+            case 'Прогноз дохода': labelText = 'Прогноз дохода'; break;
+            case 'Цель':
+                isGoalLine = true;
+                if (fullInvestmentData.goal === 'dream') labelText = 'Целевая сумма';
+                else if (fullInvestmentData.goal === 'passive') {
+                    labelText = (currentChartView === 'income') ? 'Целевой доход' : 'Необходимая сумма';
+                }
+                break;
+            default: return;
+        }
+        
+        if (!isGoalLine && dataset.label !== 'Прогноз дохода' && typeof fullInvestmentData.amount !== 'undefined') {
+            const totalInvested = fullInvestmentData.amount + ( (fullInvestmentData.monthlyContribution || 0) * (fullInvestmentData.term_months || 0) );
+            const profit = lastValue - totalInvested;
+            const sign = profit >= 0 ? '+' : '';
+            const profitClass = profit < 0 ? 'loss' : 'gain';
+            profitText = `<span class="${profitClass}">${sign}${Math.round(profit).toLocaleString('ru-RU')} ₽</span>`;
+        }
+
+        const lineStyle = isGoalLine ? `border-bottom: 2px dashed ${color};` : `background-color: ${color};`;
+
+        legendHTML += `
+            <div class="legend-item">
+                <span class="legend-color" style="${lineStyle}"></span>
+                <span class="legend-label">${labelText}</span>
+                <span class="legend-value">${valueText}</span>
+                <span class="legend-profit">${profitText}</span>
+            </div>
+        `;
+    });
+    legendContainer.innerHTML = legendHTML;
+}
+
+function generateChartData(portfolioData, invData) {
+    const { forecast, goal_target_capital, monthly_income_forecast } = portfolioData;
+    const isPassiveGoal = invData.goal === 'passive';
+    const isIncomeView = isPassiveGoal && currentChartView === 'income';
+    const datasets = [];
+    let targetLineValue = null;
+    let yTitle = 'Сумма капитала, ₽';
+
+    if (isIncomeView) {
+        yTitle = 'Месячный доход, ₽';
+        datasets.push({ label: 'Прогноз дохода', data: monthly_income_forecast, borderColor: '#f8f9fa', tension: 0.1 });
+        targetLineValue = invData.passiveIncome;
+    } else {
+        datasets.push({ label: 'Макс. доход', data: forecast.max, borderColor: '#28a745', tension: 0.1 });
+        datasets.push({ label: 'Сред. доход', data: forecast.avg, borderColor: '#f8f9fa', tension: 0.1 });
+        datasets.push({ label: 'Мин. доход', data: forecast.min, borderColor: '#dc3545', tension: 0.1 });
+        if (invData.goal === 'dream') targetLineValue = invData.dreamAmount;
+        else if (isPassiveGoal && goal_target_capital) targetLineValue = goal_target_capital;
+    }
+
+    if (targetLineValue) {
+         datasets.push({
+            label: 'Цель',
+            data: Array.from({ length: forecast.labels.length }).fill(targetLineValue),
+            borderColor: '#dc2626',
+            borderDash: [5, 5], borderWidth: 2, pointRadius: 0
+        });
+    }
+    
+    return { data: { labels: forecast.labels, datasets }, yTitle };
 }
 
 function riskProfileToSliderValue(profile) {

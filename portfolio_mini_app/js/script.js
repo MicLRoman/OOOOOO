@@ -51,6 +51,9 @@ function initialize() {
  * @param {object} eventData - Дополнительные данные.
  */
 export function trackEvent(eventName, eventData = {}) {
+
+    return;
+
     if (!db) {
         console.warn(`Firebase not initialized. Mock event: '${eventName}'`, eventData);
         return;

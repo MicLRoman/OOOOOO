@@ -1,20 +1,31 @@
 /* === ИЗМЕНЕНИЯ В ШАПКЕ === */
 .portfolio-header {
     display: flex;
-    flex-direction: column; /* Заголовок и кнопки друг под другом */
-    align-items: flex-start; /* Выравнивание по левому краю */
-    gap: 0.75rem; /* Расстояние между заголовком и блоком кнопок */
+    flex-direction: column; 
+    align-items: flex-start;
+    gap: 0.75rem;
     margin-bottom: 1.5rem;
 }
 
-.header-buttons {
-    display: flex; /* Кнопки в один ряд */
-    gap: 0.75rem; /* Расстояние между кнопками */
+/* --- НОВЫЕ СТИЛИ ДЛЯ КНОПОК И СЕКЦИЙ --- */
+.main-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
-.header-buttons .btn {
-    padding: 0.5rem 1.25rem;
-    font-size: 0.9rem;
+.main-actions .btn {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+}
+
+.restart-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+    text-align: center;
 }
 /* === КОНЕЦ ИЗМЕНЕНИЙ В ШАПКЕ === */
 
@@ -28,13 +39,55 @@
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.info-item {
+/* --- СТИЛИ ДЛЯ СВОРАЧИВАЕМЫХ БЛОКОВ --- */
+.portfolio-section-toggle {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background-color: #111111;
+}
+.portfolio-section-toggle[open] > .portfolio-section-header {
+    border-bottom: 1px solid #333;
+}
+.portfolio-section-header {
+    padding: 1rem;
+    cursor: pointer;
     display: flex;
     justify-content: space-between;
-    padding-bottom: 0.75rem;
-    margin-bottom: 0.75rem;
+    align-items: center;
+    list-style: none;
+}
+.portfolio-section-header::-webkit-details-marker {
+    display: none;
+}
+.portfolio-section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+.portfolio-section-content {
+    padding: 1rem;
+}
+.portfolio-section-toggle .toggle-icon {
+    transition: transform 0.3s ease;
+}
+.portfolio-section-toggle[open] > .portfolio-section-header > .toggle-icon {
+    transform: rotate(180deg);
+}
+
+
+/* Текст в карточке */
+.info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    text-align: center;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
     border-bottom: 1px solid #333333;
 }
 .info-item:last-child {
@@ -45,71 +98,58 @@
 
 .label { color: #aaaaaa; }
 .value { font-weight: 600; }
-.guaranteed-income .value {
-    color: #28a745;
-    font-weight: 600;
-}
 
-
-.assets-section-toggle {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #333333;
-}
-.assets-toggle-header {
+.guaranteed-income .label {
     display: flex;
-    justify-content: space-between;
+    flex-direction: row;
     align-items: center;
+    gap: 0.5rem;
+}
+.tooltip-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: #444;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 18px;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
-.assets-toggle-header h4 {
-    margin: 0;
-    color: #aaaaaa;
-    font-weight: 400;
+.tooltip-icon:hover {
+    background-color: #dc2626;
 }
-.toggle-icon {
-    transition: transform 0.3s ease;
-}
-.assets-section-toggle.expanded .toggle-icon {
-    transform: rotate(180deg);
-}
-.assets-list-container {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-}
-.assets-section-toggle.expanded .assets-list-container {
-    max-height: 500px;
-}
+
 .assets-list {
-    padding-top: 1rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
 }
-
 .asset-item {
     display: flex;
     justify-content: space-between;
-    background-color: #111111;
+    background-color: #1c1c1d;
     padding: 0.75rem;
     border-radius: 8px;
+    border: 1px solid #333;
 }
 .asset-percent {
     font-weight: 600;
     color: #dc2626;
 }
-
 .view-switcher {
     display: flex;
     width: 100%;
     background-color: #1c1c1d;
     border-radius: 8px;
     padding: 0.25rem;
-    margin-bottom: 1.5rem;
 }
 .switcher-btn {
-    width: 50%;
+    flex-grow: 1; /* Чтобы кнопки занимали равное пространство */
+    width: auto;
     padding: 0.75rem;
     border: none;
     background-color: transparent;
@@ -127,43 +167,73 @@
 .view { display: none; }
 .view.active { display: block; }
 
-.chart-container, .similar-container {
+.chart-container {
     background-color: #1c1c1d;
     border-radius: 12px;
     padding: 1.5rem;
 }
 
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1.5rem;
+.similar-container {
+    background-color: #1c1c1d;
+    border-radius: 12px;
+    padding: 1.5rem;
+    overflow: hidden; /* Скрываем стрелки, выходящие за пределы */
 }
-.chart-title { font-size: 1.25rem; }
-.chart-subtitle { font-size: 0.9rem; color: #aaaaaa; }
-.chart-controls { display: flex; background-color: #111111; border-radius: 8px; padding: 0.25rem; }
-.chart-mode-btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    background-color: transparent;
-    color: #aaaaaa;
-    border-radius: 6px;
-}
-.chart-mode-btn.active { background-color: #333333; color: #ffffff; }
+
 .chart-wrapper { position: relative; height: 300px; }
 
-.similar-title { margin-bottom: 1.5rem; }
-.slider-container { 
-    position: relative;
-    display: flex; 
-    align-items: center; 
+.similar-container h3 {
+    margin-bottom: 0.5rem;
 }
+
+.similar-subtitle {
+    font-size: 0.9rem;
+    color: #aaaaaa;
+    margin-bottom: 1.5rem;
+}
+
+
+/* --- НОВЫЕ СТИЛИ ДЛЯ СЛАЙДЕРА --- */
+.slider-container {
+    position: relative;
+}
+.slider-wrapper {
+    overflow: hidden;
+    width: 100%;
+}
+.slider-track {
+    display: flex;
+    transition: transform 0.4s ease;
+}
+.slide {
+    flex: 0 0 100%;
+    box-sizing: border-box;
+    background-color: #111111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+.slide h4 { margin-bottom: 0.5rem; }
+.slide-desc {
+    color: #aaaaaa;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+.slide-details {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 0.9rem;
+    border-top: 1px solid #333;
+    padding-top: 1rem;
+}
+.slide-details strong { color: #fff; }
+
 .slider-arrow {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
-    
     cursor: pointer;
     width: 40px;
     height: 40px;
@@ -172,48 +242,22 @@
     background-color: rgba(28, 28, 29, 0.8);
     color: #ffffff;
     font-size: 1.5rem;
-
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, opacity 0.2s;
 }
-.slider-arrow:hover {
+.slider-arrow:hover:not(:disabled) {
     background-color: #333333;
 }
-.slider-arrow.prev {
-    left: -20px;
+.slider-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
 }
-.slider-arrow.next {
-    right: -20px;
-}
+.slider-arrow.prev { left: -15px; }
+.slider-arrow.next { right: -15px; }
+/* --- КОНЕЦ СТИЛЕЙ ДЛЯ СЛАЙДЕРА --- */
 
-.slider-wrapper { 
-    width: 100%;
-    overflow: hidden; 
-}
-.slider-track { 
-    display: flex; 
-    transition: transform 0.4s ease; 
-}
-.slide {
-    flex: 0 0 100%;
-    box-sizing: border-box;
-    background-color: #111111;
-    border-radius: 8px;
-    padding: 1.5rem;
-    text-align: center;
-}
-
-.slide-title { font-size: 1.2rem; margin-bottom: 0.5rem; }
-.slide-desc { color: #aaaaaa; margin-bottom: 1rem; }
-.slide-return { color: #28a745; font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem; }
-.btn-expand-portfolio {
-    width: 100%;
-    padding: 0.75rem;
-    font-size: 1rem;
-    background-color: #333333;
-}
 
 .popup-overlay {
     position: fixed;
@@ -257,32 +301,41 @@
     color: #aaaaaa;
     cursor: pointer;
 }
-.popup-assets-list { margin: 1.5rem 0; }
-.popup-chart-wrapper { position: relative; height: 200px; }
 
-/* Стили для информационного попапа */
-.info-popup-content h3 {
-    margin-bottom: 1rem;
+.popup-image {
+    width: 100%;
+    max-height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin: 1rem 0;
+    background-color: #000;
 }
-.info-popup-content p {
-    color: #aaaaaa;
+
+.goal-summary-card {
+    background-color: #111111;
+    border: 1px solid #333;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
     margin-bottom: 1.5rem;
 }
-.info-popup-content p strong {
+
+.goal-summary-card p {
+    color: #aaaaaa;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+}
+.goal-summary-card p:not(:last-child) {
+    margin-bottom: 0.75rem;
+}
+.goal-summary-card strong {
     color: #ffffff;
-}
-.info-popup-content .btn {
-    width: 100%;
+    font-weight: 600;
 }
 
-
-/* --- СТИЛИ ДЛЯ КНОПКИ ПОДТВЕРЖДЕНИЯ --- */
 .confirm-button-container {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #333333;
-    display: flex;
-    justify-content: center;
+   display: none; /* Этот блок больше не используется */
 }
 .btn-large {
     padding: 1rem 2rem;
@@ -291,28 +344,109 @@
     max-width: 400px;
 }
 
-/* ================================================================================
-  КОММЕНТАРИЙ: БЛОК С ИСПРАВЛЕНИЯМИ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ
-================================================================================
-  Здесь находятся стили, которые мы добавили, чтобы кнопки "Редактировать"
-  и "Начать сначала" не пропадали на маленьких экранах. Мы используем
-  grid-лэйаут, чтобы они всегда занимали две равные колонки.
-*/
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+}
+
+.legend-item {
+    display: grid;
+    /* Columns: color swatch, label, value, profit */
+    grid-template-columns: 20px 1fr auto auto;
+    gap: 0 0.75rem;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.legend-color {
+    width: 16px;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.legend-label {
+    color: #aaaaaa;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.legend-value {
+    font-weight: 600;
+    color: #ffffff;
+    text-align: right;
+}
+
+.legend-profit {
+    font-weight: 600;
+    min-width: 85px; /* Reserve space to prevent layout shifts */
+    text-align: right;
+    white-space: nowrap;
+}
+
+.legend-profit span.positive {
+    color: #28a745;
+}
+
+.legend-profit span.negative {
+    color: #dc2626;
+}
+
+
 @media (max-width: 768px) {
-    /* 1. Адаптируем заголовок, чтобы кнопки не пропадали */
     .portfolio-header {
-        align-items: stretch; /* Растягиваем элементы по ширине */
+        align-items: stretch;
         gap: 1rem;
     }
     .header-buttons {
-        display: grid; /* Используем грид для стабильности */
-        grid-template-columns: 1fr 1fr; /* Две равные колонки */
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         width: 100%;
     }
     
     .assets-list { grid-template-columns: 1fr; }
-    .chart-header { flex-direction: column; gap: 1rem; }
+    
     .slider-arrow.prev { left: 5px; }
     .slider-arrow.next { right: 5px; }
 }
 
+@media (max-width: 420px) {
+    .header-buttons {
+        grid-template-columns: 1fr;
+    }
+}
+
+#change-goal-popup .popup-buttons .btn-main {
+    background-color: #222;
+    border-color: #444;
+    color: #f0f0f0;
+}
+
+#change-goal-popup .popup-buttons .btn-main:hover {
+    background-color: #333;
+    border-color: #555;
+}
+
+#change-goal-popup .popup-buttons .btn-secondary {
+    background-color: transparent;
+    border: 1px solid #444;
+    color: #aaaaaa;
+}
+
+#change-goal-popup .popup-buttons .btn-secondary:hover {
+    background-color: #222;
+    color: #f0f0f0;
+}
+
+.spacer {
+    height: 0.2rem;
+}

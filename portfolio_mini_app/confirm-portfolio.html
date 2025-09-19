@@ -11,7 +11,13 @@
     <div class="container">
         <main class="main-content">
             <div class="confirm-card">
-                <h3>Подтверждение портфеля</h3>
+                <h3 id="confirm-title">Подтверждение портфеля</h3>
+                
+                <!-- ИЗМЕНЕНИЕ: Новая, более структурированная карточка для сводки по цели -->
+                <div class="final-summary-card" id="final-summary-card">
+                    <!-- Содержимое будет сгенерировано из JavaScript -->
+                </div>
+
                 <div class="profit-summary">
                     <div class="profit-item green">
                         <span class="label">Макс. доход:</span>
@@ -26,19 +32,7 @@
                         <span class="value" id="final-min-profit"></span>
                     </div>
                 </div>
-                <div class="hedge-option">
-                    <label for="hedge-risk-checkbox">
-                        <input type="checkbox" id="hedge-risk-checkbox">
-                        Покрыть убыток "финиками"
-                    </label>
-                    <div class="tooltip-container">
-                        <span class="tooltip-trigger">?</span>
-                        <div class="tooltip-content">
-                            "Финики" - это внутренняя валюта Финуслуг, обеспечивающая покрытие возможных убытков реальными рублями в рамках программы лояльности.
-                        </div>
-                    </div>
-                </div>
-                <button id="convert-to-real-btn" class="btn btn-main btn-large">Перевести в реальные деньги</button>
+                <button id="convert-to-real-btn" class="btn btn-main btn-large">Перейти к покупке</button>
                  <a href="portfolio.html" class="back-link">Вернуться к портфелю</a>
             </div>
         </main>
