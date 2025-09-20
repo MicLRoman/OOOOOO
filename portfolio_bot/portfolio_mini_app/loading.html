@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Формируем портфель...</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/loading.css">
+</head>
+<body>
+
+    <div class="container">
+        <div class="layout-grid-loading">
+            <!-- Левая панель с анимацией -->
+            <div class="panel loading-panel">
+                <h2 class="step-title">Формируем ваш портфель</h2>
+                <p>Подбираем активы и рассчитываем прогноз. Обычно это занимает не больше минуты.</p>
+                <div class="spinner-container">
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-track" cx="50" cy="50" r="45"></circle>
+                        <circle class="timer-progress" id="timer-progress" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="timer-text" id="timer-text"></div>
+                </div>
+            </div>
+
+            <!-- Правая панель с опросом -->
+            <div class="panel survey-panel">
+                <h3 class="survey-title">Пока мы считаем, пройдите короткий опрос:</h3>
+                
+                <div class="question">
+                    <label>Возраст:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="age" value="18-24"> 18-24</label>
+                        <label><input type="radio" name="age" value="25-30"> 25-30</label>
+                        <label><input type="radio" name="age" value="31-36"> 31-36</label>
+                        <label><input type="radio" name="age" value="37+"> 37+</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <label>Опыт инвестирования:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="experience" value="none"> Не инвестировал</label>
+                        <label><input type="radio" name="experience" value="tried"> Пробовал(а), но не понимаю</label>
+                        <label><input type="radio" name="experience" value="basic"> Имею базовые представления</label>
+                    </div>
+                </div>
+
+                <!-- ИЗМЕНЕННЫЙ ВОПРОС -->
+                <div class="question">
+                    <label>Что бы вы предпочли?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="psychotype" value="guaranteed"> Гарантированно заработать 5 000 ₽</label>
+                        <label><input type="radio" name="psychotype" value="balanced"> С высокой вероятностью получить 8 000 ₽, но есть небольшой риск ничего не получить</label>
+                        <label><input type="radio" name="psychotype" value="risky"> С 50% шансом заработать 15 000 ₽ (и 50% шансом не получить ничего)</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <label>Чем занимаетесь:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="activity" value="study"> Учусь</label>
+                        <label><input type="checkbox" name="activity" value="intern"> Стажируюсь</label>
+                        <label><input type="checkbox" name="activity" value="work"> Работаю</label>
+                    </div>
+                </div>
+
+                <button class="btn btn-main" id="submit-survey-btn">Отправить и посмотреть портфель</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/script.js" type="module"></script>
+    <script src="js/loading.js" type="module"></script>
+
+</body>
+</html>

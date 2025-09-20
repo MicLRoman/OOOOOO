@@ -1,0 +1,267 @@
+/* --- Общие стили для всего приложения --- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 1rem; 
+}
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- Стили для главной страницы (index.html) --- */
+
+.main-page-container {
+    justify-content: space-between;
+}
+
+.hero-section {
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    margin: 1rem auto;
+    padding: 0 1rem; 
+}
+
+.hero-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.hero-subtitle {
+    font-size: 1rem;
+    color: #aaaaaa;
+    margin-bottom: 2rem;
+}
+
+.goal-selection-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; 
+    width: 100%;
+    margin: 0 auto;
+}
+
+.goal-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Отступ между иконкой и текстом */
+    padding: 1rem; 
+    background-color: #000000;
+    border: 1px solid #333;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #ffffff;
+    transition: all 0.2s ease;
+    width: 100%;
+    cursor: pointer;
+}
+
+.goal-card:hover {
+    border-color: #dc2626;
+    transform: translateY(-4px);
+}
+
+.goal-card-text {
+    text-align: left;
+}
+
+.goal-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.goal-desc {
+    font-size: 0.9rem;
+    color: #aaaaaa;
+}
+
+.goal-card-img {
+    width: 48px; 
+    height: 48px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* --- Секция для демо-портфеля --- */
+.demo-section {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #333;
+}
+.demo-text {
+    color: #aaaaaa;
+    margin-bottom: 1rem;
+}
+
+
+.footer {
+    padding: 2rem 1rem 1rem;
+    text-align: center;
+    color: #aaaaaa;
+    font-size: 0.8rem;
+}
+
+.disclaimer {
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+.credits {
+    font-size: 0.75rem;
+}
+
+
+.btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 150px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-main {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+.btn-main:hover {
+    background-color: #b91c1c;
+}
+
+.btn-secondary {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+}
+.btn-secondary:hover {
+    background-color: #444;
+}
+
+
+/* --- СТИЛИ ДЛЯ POPUP --- */
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 1000;
+    padding: 1rem;
+}
+.popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+.popup-content {
+    background-color: #1c1c1d;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 100%;
+    /* --- ИЗМЕНЕНИЕ --- */
+    /* Устанавливаем максимальную ширину, которая не превысит 1200px,
+       но на маленьких экранах будет занимать почти всю ширину (95vw). */
+    max-width: min(500px, 95vw);
+    
+    /* --- ИЗМЕНЕНИЕ --- */
+    /* Добавляем максимальную высоту и автоматическую прокрутку,
+       если контент не помещается на экране (например, на мобильных). */
+    max-height: 95vh;
+    overflow-y: auto;
+
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+    text-align: center;
+}
+.popup-overlay.active .popup-content {
+    transform: scale(1);
+}
+.popup-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: #aaaaaa;
+    cursor: pointer;
+}
+.popup-content h3 {
+    margin-bottom: 1rem;
+}
+.popup-content p {
+    color: #aaaaaa;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+.popup-gif {
+    width: 100%; /* Гифка будет занимать всю ширину контейнера */
+    height: auto; /* Высота подстраивается автоматически для сохранения пропорций */
+    border-radius: 8px;
+    background-color: #000;
+}
+.popup-confirm-btn {
+    width: 100%;
+}
+
+.help-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #555;
+    background-color: #333;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+}
+
+.help-btn:hover {
+    background-color: #444;
+    border-color: #777;
+}

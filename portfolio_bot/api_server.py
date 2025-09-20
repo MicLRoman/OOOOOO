@@ -29,10 +29,10 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 @app.route('/<path:path>')
 def serve_static(path):
     """
-    Отдает запрошенный файл из папки с фронтендом.
+    Отдаёт запрошенный файл из папки с фронтендом.
     """
     if not os.path.isdir(static_folder_path):
-        return "Ошибка: Директория со статическими файлами не найдена.", 500
+        return "Ошибка: директория со статическими файлами не найдена.", 500
 
     file_path = os.path.join(static_folder_path, path)
     if not os.path.exists(file_path):
@@ -47,7 +47,7 @@ def serve_static(path):
 @app.route('/api/calculate', methods=['POST'])
 def calculate_portfolio_endpoint():
     """
-    Точка входа (endpoint) для расчетов.
+    Точка входа (endpoint) для расчётов.
     """
     try:
         data = request.json

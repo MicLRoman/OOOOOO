@@ -1,0 +1,127 @@
+.final-card {
+    background-color: #1c1c1d;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    border: 1px solid #333333;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.final-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.final-subtitle {
+    font-size: 1rem;
+    color: #aaaaaa;
+    line-height: 1.6;
+    margin-top: -0.5rem;
+}
+.final-subtitle a {
+    color: #dc2626;
+    text-decoration: none;
+}
+.final-subtitle a:hover {
+    text-decoration: underline;
+}
+
+.important-note {
+    background-color: rgba(220, 38, 38, 0.1);
+    border: 1px solid #dc2626;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+}
+.important-note .icon {
+    font-size: 1.5rem;
+}
+.important-note p {
+    margin: 0;
+    line-height: 1.5;
+    color: #f0f0f0;
+}
+
+.purchase-plan {
+    text-align: left;
+}
+.plan-title {
+    margin-bottom: 1rem;
+}
+.assets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.asset-item {
+    background-color: #111111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+}
+.asset-name {
+    font-weight: 600;
+}
+.asset-amount {
+    font-weight: 500;
+    color: #aaaaaa;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.copy-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #fff;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+.copy-btn:hover {
+    background: #444;
+}
+.copy-btn.copied {
+    background-color: #28a745;
+}
+
+.purchase-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    min-width: 100px;
+}
+
+.button-group {
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+}
+.button-group .btn {
+    width: 100%;
+}
+
+@media (max-width: 480px) {
+    .asset-item {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    .purchase-link {
+        width: 100%;
+    }
+}

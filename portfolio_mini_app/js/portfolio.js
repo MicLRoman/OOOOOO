@@ -64,6 +64,9 @@ async function initializePage() {
         if (!fullPortfolioData || !fullPortfolioData.composition) {
              throw new Error('Получена неверная структура данных портфеля.');
         }
+        
+        investmentData.monthlyContribution = fullPortfolioData.monthly_contribution || 0;
+
 
         renderPage(fullPortfolioData, investmentData);
         trackEvent('page_view_portfolio', { goal: investmentData.goal });
@@ -247,6 +250,9 @@ function renderPage(portfolioData, invData) {
         <div class="content-views">
             <div id="chart-view" class="view active">
                 <div class="chart-container">
+                    <div class="chart-header">
+                         <h3>График успеха <button class="help-btn" id="chart-help-btn">?</button></h3>
+                    </div>
                     <div class="chart-wrapper">
                         <canvas id="performance-chart"></canvas>
                     </div>
@@ -271,9 +277,10 @@ function renderPage(portfolioData, invData) {
         <div id="funds-info-popup" class="popup-overlay">
             <div class="popup-content">
                 <button class="popup-close" id="close-funds-popup-btn">&times;</button>
-                <h3>Ваши деньги работают на экономику</h3>
+                <h3>Принцип диверсификации</h3>
                 <img src="img/factory.jpg" alt="Промышленный пейзаж" class="popup-image">
-                <p>Мы не покупаем акции отдельных компаний. Вместо этого мы вложили ваши деньги в фонды, которые включают в себя сотни крупнейших российских предприятий. Это значит, что ваши активы подкреплены всей экономикой страны, что делает вложения более надежными.</p>
+                <p>Ваши средства распределяются по фондам, которые инвестируют в сотни крупнейших российских компаний. Это снижает риски по сравнению с покупкой акций одной компании и обеспечивает широкую диверсификацию.</p>
+                <p style="font-size: 0.8rem; color: #aaaaaa; margin-top: 1rem;">Информация не является индивидуальной инвестиционной рекомендацией.</p>
                 <button class="btn btn-main" id="confirm-funds-popup-btn">Всё понятно!</button>
             </div>
         </div>
@@ -287,6 +294,22 @@ function renderPage(portfolioData, invData) {
                     <button class="btn btn-main" id="restart-from-popup-btn">Начать заново</button>
                     <button class="btn btn-secondary" id="cancel-change-goal-btn-2">Отмена</button>
                 </div>
+            </div>
+        </div>
+        
+        <div id="calculation-help-popup" class="popup-overlay">
+            <div class="popup-content">
+                <button class="popup-close">&times;</button>
+                <h3>Как работает наш прогноз?</h3>
+                <p>Наш инструмент не предсказывает будущее, а создает математическую модель наиболее вероятных сценариев развития ваших инвестиций. Важно помнить, что доходность в прошлом не гарантирует ее в будущем.</p>
+                <p>Для построения прогноза мы используем <strong>метод Монте-Карло</strong> — общепринятый стандарт в финансовом моделировании. Алгоритм 10 000 раз «проживает» весь срок ваших инвестиций, имитируя колебания реального рынка.</p>
+                <h4>Что означают линии на графике?</h4>
+                <ul style="text-align: left; margin: 1rem 0; padding-left: 1.5rem;">
+                    <li style="margin-bottom: 0.5rem;"><strong>Средний прогноз (белая линия):</strong> Это усредненный результат всех симуляций, наиболее вероятный сценарий.</li>
+                    <li><strong>Оптимистичный и Пессимистичный (зеленая и красная):</strong> Это вероятностный коридор, в который попадает большинство реалистичных исходов.</li>
+                </ul>
+                <p style="font-size: 0.8rem; color: #aaaaaa; text-align: left;">Все расчеты и прогнозы носят исключительно информационный характер и не являются индивидуальной инвестиционной рекомендацией.</p>
+                 <button class="btn btn-main" id="close-calc-help-btn">Понятно</button>
             </div>
         </div>
     `;
@@ -305,6 +328,7 @@ function setupEventListeners() {
     });
     
     document.getElementById('funds-info-help-btn').addEventListener('click', () => {
+        trackEvent('click_funds_info_help');
         document.getElementById('funds-info-popup').classList.add('active');
     });
 
@@ -347,6 +371,7 @@ function setupEventListeners() {
                 return;
              }
              if (localStorage.getItem('goalChangePopupShown') !== 'true') {
+                trackEvent('click_change_goal_trigger');
                 document.getElementById('change-goal-popup').classList.add('active');
                 localStorage.setItem('goalChangePopupShown', 'true');
              }
@@ -359,7 +384,10 @@ function setupEventListeners() {
         window.location.href = 'index.html';
     });
 
-    const closePopup = () => document.getElementById('change-goal-popup').classList.remove('active');
+    const closePopup = () => {
+        trackEvent('close_change_goal_popup');
+        document.getElementById('change-goal-popup').classList.remove('active');
+    };
     document.getElementById('cancel-change-goal-btn').addEventListener('click', closePopup);
     document.getElementById('cancel-change-goal-btn-2').addEventListener('click', closePopup);
 
@@ -403,6 +431,30 @@ function setupEventListeners() {
                 similarView.classList.remove('active');
                 chartView.classList.add('active');
                 updateChart(fullPortfolioData, investmentData);
+            }
+        });
+    }
+    
+    // Добавляем отслеживание для кнопки помощи по расчету
+    const calcHelpBtn = document.querySelector('.chart-header .help-btn');
+    if(calcHelpBtn) {
+        calcHelpBtn.addEventListener('click', () => {
+            trackEvent('click_calculation_method_help_portfolio');
+            document.getElementById('calculation-help-popup').classList.add('active');
+        });
+    }
+
+    const calcHelpPopup = document.getElementById('calculation-help-popup');
+    if (calcHelpPopup) {
+        const closeButton = calcHelpPopup.querySelector('.popup-close, #close-calc-help-btn');
+        const closePopupAction = () => {
+            trackEvent('close_calculation_method_popup_portfolio');
+            calcHelpPopup.classList.remove('active');
+        };
+        closeButton.addEventListener('click', closePopupAction);
+        calcHelpPopup.addEventListener('click', (e) => {
+            if (e.target === calcHelpPopup) {
+                closePopupAction();
             }
         });
     }
@@ -527,6 +579,7 @@ function updateChartLegend(chart, investmentData, currentChartView) {
             case 'Сред. доход': labelText = 'Сред. доход'; break;
             case 'Мин. доход': labelText = 'Мин. доход'; break;
             case 'Прогноз дохода': labelText = 'Прогноз дохода'; break;
+            case 'Вклад в банке': labelText = 'Вклад в банке'; break;
             case 'Цель':
                 isGoalLine = true;
                 if (investmentData.goal === 'dream') {
@@ -539,14 +592,14 @@ function updateChartLegend(chart, investmentData, currentChartView) {
         }
         
          if (!isGoalLine && dataset.label !== 'Прогноз дохода' && investmentData.amount) {
-            const totalInvested = investmentData.amount + ( (investmentData.monthlyContribution || 0) * (investmentData.term_months || 0) );
-            const profit = lastValue - totalInvested;
+            const firstValue = dataset.data[0];
+            const profit = lastValue - firstValue;
             const sign = profit >= 0 ? '+' : '';
             const profitClass = profit < 0 ? 'loss' : 'gain';
             profitText = `<span class="${profitClass}">${sign}${Math.round(profit).toLocaleString('ru-RU')} ₽</span>`;
         }
 
-        const lineStyle = isGoalLine ? `border-bottom: 2px dashed ${color};` : `background-color: ${color};`;
+        const lineStyle = isGoalLine || dataset.label === 'Вклад в банке' ? `border-bottom: 2px dashed ${color};` : `background-color: ${color};`;
 
         legendHTML += `
             <div class="legend-item">
@@ -562,7 +615,7 @@ function updateChartLegend(chart, investmentData, currentChartView) {
 }
 
 function generateChartData(portfolioData, invData) {
-    const { forecast, goal_target_capital, monthly_income_forecast } = portfolioData;
+    const { forecast, goal_target_capital, monthly_income_forecast, deposit_forecast } = portfolioData;
     const isPassiveGoal = invData.goal === 'passive';
     const isIncomeView = isPassiveGoal && currentChartView === 'income';
 
@@ -578,6 +631,18 @@ function generateChartData(portfolioData, invData) {
         datasets.push({ label: 'Макс. доход', data: forecast.max, borderColor: '#28a745', tension: 0.1 });
         datasets.push({ label: 'Сред. доход', data: forecast.avg, borderColor: '#f8f9fa', tension: 0.1 });
         datasets.push({ label: 'Мин. доход', data: forecast.min, borderColor: '#dc3545', tension: 0.1 });
+
+        if (deposit_forecast) {
+            datasets.push({
+                label: 'Вклад в банке',
+                data: deposit_forecast,
+                borderColor: 'rgba(108, 117, 125, 0.7)',
+                borderDash: [5, 5],
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.1
+            });
+        }
 
         if (invData.goal === 'dream') {
             targetLineValue = invData.dreamAmount;
@@ -646,4 +711,5 @@ function showError(message) {
         `;
     }
 }
+
 

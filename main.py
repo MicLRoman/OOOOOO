@@ -90,17 +90,6 @@ def handle_web_app_data(message):
         forecast_avg = forecast.get('avg', [])[-1]
         forecast_max = forecast.get('max', [])[-1]
         initial_amount = portfolio_data.get('initial_amount', 0)
-        
-        # --- ИЗМЕНЕНИЕ: Получаем и форматируем вероятность ---
-        probability = portfolio_data.get('goalAchievedProbability')
-        probability_text = ""
-        if probability is not None:
-            # --- ИЗМЕНЕНИЕ: Более удачные формулировки ---
-            if goal == 'grow':
-                prob_label = "Вероятность, что капитал превысит вложения"
-            else:
-                prob_label = "Вероятность достижения цели"
-            probability_text = f"_{prob_label}: *{probability}%*_\\n\\n"
 
 
         response_text = ""
@@ -117,7 +106,6 @@ def handle_web_app_data(message):
                 f"• В худшем случае: *~{forecast_min:,.0f} ₽*\\n"
                 f"• Базовый прогноз: *~{forecast_avg:,.0f} ₽*\\n"
                 f"• В лучшем случае: *~{forecast_max:,.0f} ₽*\\n"
-                f"{probability_text}"
                 f"*{strategy_name} (~{expected_return}% годовых)*\\n"
                 f"{composition_text}"
             )
@@ -136,7 +124,6 @@ def handle_web_app_data(message):
                 f"• В худшем случае: *~{min_income:,.0f} ₽*\\n"
                 f"• Базовый прогноз: *~{avg_income:,.0f} ₽*\\n"
                 f"• В лучшем случае: *~{max_income:,.0f} ₽*\\n"
-                f"{probability_text}"
                 f"*{strategy_name} (~{expected_return}% годовых)*\\n"
                 f"{composition_text}"
             )
@@ -150,7 +137,6 @@ def handle_web_app_data(message):
                 f"• В худшем случае: *~{forecast_min:,.0f} ₽*\\n"
                 f"• Базовый прогноз: *~{forecast_avg:,.0f} ₽*\\n"
                 f"• В лучшем случае: *~{forecast_max:,.0f} ₽*\\n"
-                f"{probability_text}"
                 f"*{strategy_name} (~{expected_return}% годовых)*\\n"
                 f"{composition_text}"
             )

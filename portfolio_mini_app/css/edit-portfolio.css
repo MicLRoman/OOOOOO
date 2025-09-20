@@ -115,7 +115,7 @@
     font-size: 1rem;
 }
 
-#risk-level-label, #term-level-label {
+#risk-level-label, #term-level-label, #contribution-level-label {
     font-weight: 600;
 }
 
@@ -258,6 +258,9 @@ input[type="range"]::-moz-range-thumb {
     transition: transform 0.3s;
     text-align: center;
 }
+.popup-content.wide {
+    max-width: 700px;
+}
 .popup-overlay.active .popup-content {
     transform: scale(1);
 }
@@ -286,28 +289,63 @@ input[type="range"]::-moz-range-thumb {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    max-height: 60vh;
+    overflow-y: auto;
 }
 
-.replacement-option-btn {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: #333;
+.replacement-option-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background-color: #111;
     border: 1px solid #444;
-    color: #fff;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    border-radius: 12px;
+    transition: border-color 0.2s;
 }
-.replacement-option-btn:hover {
-    background-color: #dc2626;
+.replacement-option-card:not(.current):hover {
     border-color: #dc2626;
 }
-.replacement-option-btn.current {
-    background-color: #111;
-    border-color: #555;
-    cursor: not-allowed;
-    opacity: 0.7;
+.replacement-option-card.current {
+    border-color: #dc2626;
+    background-color: rgba(220, 38, 38, 0.1);
 }
+.card-main {
+    flex-grow: 1;
+}
+.fund-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.fund-return {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+.fund-return.positive strong { color: #28a745; }
+.fund-return.negative strong { color: #dc2626; }
+
+.fund-details {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: #aaaaaa;
+    margin-bottom: 1rem;
+}
+.fund-risk, .fund-min-purchase {
+    background-color: #333;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+.fund-description {
+    font-size: 0.9rem;
+    color: #aaaaaa;
+    line-height: 1.6;
+}
+.card-action .btn {
+    width: 120px;
+}
+
 
 .chart-wrapper {
     position: relative;
@@ -375,3 +413,22 @@ input[type="range"]::-moz-range-thumb {
 .spacer {
     height: 0.2rem;
 }
+
+/* --- Адаптивность для карточек замены --- */
+@media (max-width: 600px) {
+    .replacement-option-card {
+        flex-direction: column;
+        align-items: stretch; /* Растягиваем элементы на всю ширину */
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .card-action {
+        width: 100%;
+    }
+
+    .card-action .btn {
+        width: 100%; /* Кнопка занимает всю ширину */
+    }
+}
+

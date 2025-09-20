@@ -6,10 +6,18 @@ let investmentData = null;
 let allFundsCache = null;
 let isRecalculating = false;
 let portfolioChartInstance = null;
-let currentChartView = 'capital'; 
+let currentChartView = 'capital';
+let originalPortfolioBeforeEdit = null;
 const tg = window.Telegram.WebApp;
 const API_URL_CALCULATE = `${window.location.origin}/api/calculate`;
 const API_URL_FUNDS = `${window.location.origin}/api/funds`;
+
+const riskLevelMap = {
+    'low': 'Низкий риск',
+    'medium': 'Средний риск',
+    'high': 'Высокий риск',
+    'bonds': 'Облигация'
+};
 
 function formatTerm(months) {
     months = parseInt(months, 10);
@@ -35,6 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!investmentData || !storedPortfolio) throw new Error("Данные не найдены.");
 
         currentPortfolio = storedPortfolio;
+        originalPortfolioBeforeEdit = JSON.parse(JSON.stringify(storedPortfolio)); // Глубокая копия для сравнения
+
         currentPortfolio.term_months = currentPortfolio.term_months || currentPortfolio.term * 12;
         currentPortfolio.monthly_contribution = currentPortfolio.monthly_contribution || 0;
         investmentData.monthlyContribution = investmentData.monthlyContribution || 0;
@@ -42,7 +52,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await fetchAllFunds();
         renderPage(); 
-        if (!localStorage.getItem('hasSeenEditTutorial')) showTutorial();
+        if (!localStorage.getItem('hasSeenEditTutorial')) {
+            trackEvent('auto_show_edit_tutorial');
+            showTutorial();
+        }
     } catch (error) {
         console.error("❌ Ошибка инициализации редактора:", error);
         document.body.innerHTML = `<div class="error-message">${error.message}<br><a href="auto-selection.html">Начать заново</a></div>`;
@@ -127,7 +140,7 @@ function renderPage() {
         </div>
     </div>
     <div id="replace-asset-popup" class="popup-overlay">
-        <div class="popup-content">
+        <div class="popup-content wide">
             <button class="popup-close" id="close-replace-popup">&times;</button>
             <h3 id="replace-popup-title">Заменить актив</h3>
             <div id="replacement-options" class="replacement-options-list"></div>
@@ -176,7 +189,7 @@ function updateGoalSummaryCard() {
         const statusText = isGoalReached ? `Согласно серднему, наиболее вероятному сценарию, прогнозу, вы <strong>достигнете своей цели</strong>.` : `Согласно серднему, наиболее вероятному сценарию, прогнозу, для достижения цели вам может не хватить ~<strong>${Math.round(dreamAmount - finalCapitalAvg).toLocaleString('ru-RU')} ₽</strong>.`;
         goalSpecificInfoHtml = `<div class="goal-summary-card"><p>Ваша цель — накопить <strong>${dreamAmount.toLocaleString('ru-RU')} ₽</strong> за <strong>${termText}</strong>. ${statusText}</p></div>`;
     } else if (investmentData.goal === 'grow') {
-        const profit = finalCapitalAvg - (currentPortfolio.initial_amount + (currentPortfolio.monthly_contribution * currentPortfolio.term_months));
+        const profit = finalCapitalAvg - currentPortfolio.initial_amount;
         goalSpecificInfoHtml = `<div class="goal-summary-card"><p>Через <strong>${termText}</strong> ваш капитал может вырасти до ~<strong>${Math.round(finalCapitalAvg).toLocaleString('ru-RU')} ₽</strong> (<strong>+${Math.round(profit).toLocaleString('ru-RU')} ₽</strong>).</p></div>`;
     }
     container.innerHTML = goalSpecificInfoHtml;
@@ -264,6 +277,7 @@ function setupEventListeners() {
 
     document.getElementById('replace-asset-popup').addEventListener('click', e => {
         if (e.target.matches('#replace-asset-popup, #close-replace-popup')) {
+            trackEvent('close_replace_asset_popup');
             e.currentTarget.classList.remove('active');
         }
     });
@@ -297,6 +311,18 @@ async function handleTermSliderChange() {
         trackEvent('term_slider_used', { newTermMonths: termInMonths });
         await recalculatePortfolio();
     }
+}
+
+async function handleReplaceAsset(newFundName, oldFundName) {
+    trackEvent('asset_replaced', { from: oldFundName, to: newFundName });
+    
+    const newFundNames = currentPortfolio.composition.map(asset => 
+        asset.fund_name === oldFundName ? newFundName : asset.fund_name
+    );
+
+    await recalculatePortfolio({ selected_funds: newFundNames });
+
+    document.getElementById('replace-asset-popup').classList.remove('active');
 }
 
 function handleReset() {
@@ -368,36 +394,66 @@ async function recalculatePortfolio({ selected_funds = null } = {}) {
     }
 }
 
+function parseReturn(returnStr) {
+    if (!returnStr) return -Infinity;
+    return parseFloat(returnStr.replace('+', '').replace(',', '.'));
+}
+
 function openReplacePopup(fundNameToReplace) {
+    trackEvent('open_replace_asset_popup', { fund: fundNameToReplace });
     const popup = document.getElementById('replace-asset-popup');
     const optionsContainer = document.getElementById('replacement-options');
     const currentFund = allFundsCache.find(f => f.name === fundNameToReplace);
     if (!currentFund) return;
 
-    const replacementOptions = allFundsCache.filter(f => f.risk_level === currentFund.risk_level);
+    let replacementOptions = allFundsCache.filter(f => f.risk_level === currentFund.risk_level);
+
+    replacementOptions.sort((a, b) => {
+        const returnA = parseReturn(a.one_year_return_str);
+        const returnB = parseReturn(b.one_year_return_str);
+        return returnB - returnA;
+    });
     
     document.getElementById('replace-popup-title').textContent = `Заменить "${fundNameToReplace}"`;
     optionsContainer.innerHTML = '';
     replacementOptions.forEach(fund => {
-        const button = document.createElement('button');
-        button.textContent = fund.name;
-        button.className = 'replacement-option-btn';
-        if (fund.name === fundNameToReplace) {
-            button.classList.add('current');
-            button.disabled = true;
-        } else {
-            button.onclick = () => handleReplaceAsset(fund.name, fundNameToReplace);
+        const isCurrent = fund.name === fundNameToReplace;
+        const returnVal = parseReturn(fund.one_year_return_str);
+        const returnClass = returnVal >= 0 ? 'positive' : 'negative';
+
+        const card = document.createElement('div');
+        card.className = `replacement-option-card ${isCurrent ? 'current' : ''}`;
+        card.innerHTML = `
+            <div class="card-main">
+                <h4 class="fund-name">${fund.name}</h4>
+                <div class="fund-return ${returnClass}">
+                    Доходность за 1 год: <strong>${fund.one_year_return_str || 'Н/Д'}</strong>
+                </div>
+                <div class="fund-details">
+                    <span class="fund-risk">${riskLevelMap[fund.risk_level] || fund.risk_level}</span>
+                    <span class="fund-min-purchase">${fund.min_purchase_str || ''}</span>
+                </div>
+                <p class="fund-description">${fund.description || 'Описание отсутствует.'}</p>
+            </div>
+            <div class="card-action">
+                <button class="btn btn-main" ${isCurrent ? 'disabled' : ''}>${isCurrent ? 'Выбран' : 'Выбрать'}</button>
+            </div>
+        `;
+        if (!isCurrent) {
+            card.querySelector('button').onclick = () => handleReplaceAsset(fund.name, fundNameToReplace);
         }
-        optionsContainer.appendChild(button);
+        optionsContainer.appendChild(card);
     });
     popup.classList.add('active');
 }
 
 function showTutorial() {
+    trackEvent('open_edit_tutorial_help');
     document.getElementById('tutorial-popup').classList.add('active');
 }
 
 function hideTutorial() {
+    trackEvent('close_edit_tutorial');
     document.getElementById('tutorial-popup').classList.remove('active');
     localStorage.setItem('hasSeenEditTutorial', 'true');
 }
@@ -458,9 +514,12 @@ function updateChartLegend(chart, fullInvestmentData, currentChartView) {
     let legendHTML = '';
 
     datasets.forEach(dataset => {
+        if (dataset.label.startsWith('Исходный')) return;
+
         const meta = chart.getDatasetMeta(chart.data.datasets.indexOf(dataset));
         if (meta.hidden || !dataset.data || dataset.data.length === 0) return;
         
+        const firstValue = dataset.data[0];
         const lastValue = dataset.data[dataset.data.length - 1];
         const color = dataset.borderColor;
         let labelText = '';
@@ -483,9 +542,8 @@ function updateChartLegend(chart, fullInvestmentData, currentChartView) {
             default: return;
         }
         
-        if (!isGoalLine && dataset.label !== 'Прогноз дохода' && typeof fullInvestmentData.amount !== 'undefined') {
-            const totalInvested = fullInvestmentData.amount + ( (fullInvestmentData.monthlyContribution || 0) * (fullInvestmentData.term_months || 0) );
-            const profit = lastValue - totalInvested;
+        if (!isGoalLine && dataset.label !== 'Прогноз дохода' && typeof firstValue !== 'undefined') {
+            const profit = lastValue - firstValue;
             const sign = profit >= 0 ? '+' : '';
             const profitClass = profit < 0 ? 'loss' : 'gain';
             profitText = `<span class="${profitClass}">${sign}${Math.round(profit).toLocaleString('ru-RU')} ₽</span>`;
@@ -506,7 +564,7 @@ function updateChartLegend(chart, fullInvestmentData, currentChartView) {
 }
 
 function generateChartData(portfolioData, invData) {
-    const { forecast, goal_target_capital, monthly_income_forecast } = portfolioData;
+    const { forecast, goal_target_capital, monthly_income_forecast, deposit_forecast } = portfolioData;
     const isPassiveGoal = invData.goal === 'passive';
     const isIncomeView = isPassiveGoal && currentChartView === 'income';
     const datasets = [];
@@ -521,6 +579,19 @@ function generateChartData(portfolioData, invData) {
         datasets.push({ label: 'Макс. доход', data: forecast.max, borderColor: '#28a745', tension: 0.1 });
         datasets.push({ label: 'Сред. доход', data: forecast.avg, borderColor: '#f8f9fa', tension: 0.1 });
         datasets.push({ label: 'Мин. доход', data: forecast.min, borderColor: '#dc3545', tension: 0.1 });
+        
+        if (originalPortfolioBeforeEdit && originalPortfolioBeforeEdit.forecast) {
+            const originalForecast = originalPortfolioBeforeEdit.forecast;
+            const colors = ['rgba(40, 167, 69, 0.5)', 'rgba(248, 249, 250, 0.5)', 'rgba(220, 53, 69, 0.5)'];
+            ['max', 'avg', 'min'].forEach((key, index) => {
+                 datasets.push({
+                    label: `Исходный (${key})`, data: originalForecast[key],
+                    borderColor: colors[index], borderDash: [3, 3],
+                    borderWidth: 2, pointRadius: 0, tension: 0.1
+                });
+            });
+        }
+        
         if (invData.goal === 'dream') targetLineValue = invData.dreamAmount;
         else if (isPassiveGoal && goal_target_capital) targetLineValue = goal_target_capital;
     }
@@ -555,4 +626,5 @@ function sliderValueToRiskProfile(value) {
     if (value <= 80) return { riskProfile: 'moderate-aggressive', label: 'Умеренно-агрессивный' };
     return { riskProfile: 'aggressive', label: 'Агрессивный' };
 }
+
 

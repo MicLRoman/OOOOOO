@@ -112,7 +112,7 @@
                 
                 <!-- ОБЩИЙ ШАГ: РИСК -->
                 <div id="step-risk" class="step">
-                    <h2 class="step-title">Выберите риск-профиль</h2>
+                    <h2 class="step-title">Выберите риск-профиль <button class="help-btn" id="chart-help-btn">?</button></h2>
                     <div class="risk-buttons">
                         <button class="risk-btn" data-risk="conservative">
                             <span class="risk-title">Консервативная</span>
@@ -167,6 +167,20 @@
             <p>Этот прогноз показывает, какую сумму вы сможете ежемесячно получать, если по окончании срока вложения переведете весь накопленный капитал в надежные инструменты (например, вклады или облигации).</p>
             <p>Для расчета мы используем ориентировочную ставку, близкую к ключевой ставке ЦБ РФ.</p>
             <button class="btn btn-main" id="close-passive-popup-btn">Понятно</button>
+        </div>
+    </div>
+
+    <div id="calculation-help-popup" class="popup-overlay">
+        <div class="popup-content">
+            <button class="popup-close">&times;</button>
+            <h3>Как работает наш прогноз?</h3>
+            <p>Наш прогноз — это не предсказание, а математическая модель. Мы анализируем тысячи возможных сценариев развития ваших инвестиций, чтобы показать наиболее вероятный результат.</p>
+            <ul style="text-align: left; margin: 1rem 0; padding-left: 1.5rem; list-style-position: inside;">
+                <li style="margin-bottom: 0.5rem;"><strong>Белая линия</strong> — это средний, наиболее вероятный сценарий.</li>
+                <li><strong>Зеленая и красная линии</strong> показывают вероятный коридор, в котором может оказаться ваш капитал.</li>
+            </ul>
+            <p style="font-size: 0.8rem; color: #aaaaaa; text-align: center;">Все расчеты носят информационный характер и не являются индивидуальной инвестиционной рекомендацией.</p>
+            <button class="btn btn-main" id="close-calc-help-btn">Понятно</button>
         </div>
     </div>
 

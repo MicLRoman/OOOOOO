@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Ваш план покупки</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/final.css">
+</head>
+<body>
+    <div class="container">
+        <main class="main-content">
+            <div class="final-card">
+                <h1 class="final-title">Ваш портфель готов!</h1>
+                <p class="final-subtitle">
+                    Функция быстрой покупки пока в разработке. Но вы уже можете приобрести все активы по нашей инструкции на <a href="https://finuslugi.ru/" target="_blank">Финуслугах</a>.
+                </p>
+                
+                <div class="important-note">
+                    <span class="icon">💡</span>
+                    <p>Главное преимущество: для этой покупки <strong>не требуется брокерский счет!</strong></p>
+                </div>
+
+                <div class="purchase-plan">
+                    <h3 class="plan-title">Ваш план покупки:</h3>
+                    <div id="assets-purchase-list" class="assets-list">
+                        <!-- Сюда будет вставлен список активов из JS -->
+                        <div class="asset-item-placeholder">Загружаем ваш план...</div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <a href="index.html" class="btn btn-secondary">Собрать новый портфель</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/script.js" type="module"></script>
+    <script src="js/final.js" type="module"></script>
+</body>
+</html>

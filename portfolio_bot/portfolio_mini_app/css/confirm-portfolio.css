@@ -1,0 +1,99 @@
+.confirm-card {
+    background-color: #1c1c1d;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 500px;
+    border: 1px solid #333333;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.confirm-card h3 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 0;
+}
+
+/* --- НОВЫЕ СТИЛИ: Финальная сводка --- */
+.final-summary-card {
+    background-color: #111111;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    color: #aaaaaa;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.final-summary-card p {
+    margin: 0 0 0.5rem 0;
+}
+.final-summary-card p:last-child {
+    margin-bottom: 0;
+}
+
+.final-summary-card strong {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.final-summary-card .status-success {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.final-summary-card .status-fail {
+    color: #dc2626;
+    font-weight: 600;
+}
+/* --- Конец новых стилей --- */
+
+
+.profit-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.profit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: #111111;
+    border-radius: 8px;
+}
+
+.profit-item .label {
+    color: #aaaaaa;
+}
+
+.profit-item .value {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.profit-item.green .value { color: #28a745; }
+.profit-item.white .value { color: #f8f9fa; }
+.profit-item.red .value { color: #dc2626; }
+
+.btn-large {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+}
+
+.back-link {
+    color: #aaaaaa;
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
