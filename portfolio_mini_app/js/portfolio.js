@@ -354,11 +354,6 @@ function setupEventListeners() {
             } else if (headerText.includes('активы')) {
                 sectionName = 'assets';
             }
-            
-            trackEvent('toggle_portfolio_section', { 
-                section: sectionName,
-                state: event.target.open ? 'opened' : 'closed' 
-            });
         });
     });
 
@@ -369,11 +364,6 @@ function setupEventListeners() {
         changeGoalTrigger.addEventListener('click', (e) => {
              if (e.target.classList.contains('toggle-icon')) {
                 return;
-             }
-             if (localStorage.getItem('goalChangePopupShown') !== 'true') {
-                trackEvent('click_change_goal_trigger');
-                document.getElementById('change-goal-popup').classList.add('active');
-                localStorage.setItem('goalChangePopupShown', 'true');
              }
         });
     }
