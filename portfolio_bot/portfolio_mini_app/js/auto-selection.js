@@ -90,7 +90,6 @@ function setupEventListeners() {
 
     document.getElementById('back-btn').addEventListener('click', () => {
         if (state.history.length > 1) {
-            trackEvent('click_back_button_auto_selection', { fromStep: state.history[state.history.length - 1] });
             state.history.pop();
             updateView();
             updateChart();
@@ -102,7 +101,6 @@ function setupEventListeners() {
             document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             state.chartView = button.dataset.view;
-            trackEvent('switch_chart_view_auto_selection', { view: state.chartView });
             updateChart();
         });
     });
@@ -143,19 +141,16 @@ function setupEventListeners() {
     const passiveHelpBtn = document.getElementById('passive-income-help-btn');
     if (passiveHelpBtn) {
         passiveHelpBtn.addEventListener('click', () => {
-            trackEvent('click_passive_income_help');
             document.getElementById('passive-income-info-popup').classList.add('active');
         });
     }
     
-    const chartHelpBtn = document.getElementById('chart-help-btn');
-    if (chartHelpBtn) {
-        chartHelpBtn.addEventListener('click', () => {
-            trackEvent('click_calculation_method_help');
-            document.getElementById('calculation-help-popup').classList.add('active');
+    const riskHelpBtn = document.getElementById('risk-profile-help-btn');
+    if(riskHelpBtn) {
+        riskHelpBtn.addEventListener('click', () => {
+             document.getElementById('risk-profile-info-popup').classList.add('active');
         });
     }
-    // ----------------------------------------------------------------
 
     setupSlider('term-grow', 'term-value-grow', formatTermForSlider);
     setupSlider('term-dream', 'term-value-dream', formatTermForSlider);
@@ -165,18 +160,16 @@ function setupEventListeners() {
     const passivePopup = document.getElementById('passive-income-info-popup');
     passivePopup.addEventListener('click', (e) => {
         if (e.target === passivePopup || e.target.closest('.popup-close, #close-passive-popup-btn')) {
-            trackEvent('close_passive_income_popup');
             passivePopup.classList.remove('active');
             localStorage.setItem('hasSeenPassiveIncomeInfo', 'true');
         }
     });
 
-    const calcHelpPopup = document.getElementById('calculation-help-popup');
-    calcHelpPopup.addEventListener('click', (e) => {
-        if (e.target === calcHelpPopup || e.target.closest('.popup-close, #close-calc-help-btn')) {
-            trackEvent('close_calculation_method_popup');
-            calcHelpPopup.classList.remove('active');
-            localStorage.setItem('hasSeenCalculationHelp', 'true');
+    const riskPopup = document.getElementById('risk-profile-info-popup');
+    riskPopup.addEventListener('click', (e) => {
+        if (e.target === riskPopup || e.target.closest('.popup-close, #close-risk-popup-btn')) {
+            riskPopup.classList.remove('active');
+            localStorage.setItem('hasSeenRiskProfileInfo', 'true');
         }
     });
 }
@@ -190,9 +183,8 @@ function navigateTo(stepId) {
         document.getElementById('passive-income-info-popup').classList.add('active');
     }
 
-    if (stepId === 'step-risk' && !localStorage.getItem('hasSeenCalculationHelp')) {
-        trackEvent('auto_show_calculation_help');
-        document.getElementById('calculation-help-popup').classList.add('active');
+    if (stepId === 'step-risk' && !localStorage.getItem('hasSeenRiskProfileInfo')) {
+        document.getElementById('risk-profile-info-popup').classList.add('active');
     }
 }
 
@@ -208,43 +200,31 @@ function updateView() {
     document.getElementById('chart-view-toggle').classList.toggle('hidden', !(isPassiveGoal && isAfterTermStep));
 }
 
-function collectDataFromStep(activeStepId) {
-    // Эта функция теперь обновляет состояние только на основе активного шага,
-    // чтобы не перезаписывать данные из невидимых инпутов.
-    switch (activeStepId) {
-        case 'step-grow-amount':
-            state.investmentData.amount = parseInt(document.getElementById('amount-grow').value, 10) || 50000;
-            break;
-        case 'step-grow-term':
-            state.investmentData.term_months = parseInt(document.getElementById('term-grow').value, 10) || 36;
-            break;
-        case 'step-dream-target':
-            state.investmentData.dreamAmount = parseInt(document.getElementById('amount-dream').value, 10) || null;
-            break;
-        case 'step-dream-initial':
-            state.investmentData.amount = parseInt(document.getElementById('initial-amount-dream').value, 10) || 50000;
-            break;
-        case 'step-dream-term':
-            state.investmentData.term_months = parseInt(document.getElementById('term-dream').value, 10) || 36;
-            break;
-        case 'step-passive-initial':
-            state.investmentData.amount = parseInt(document.getElementById('initial-amount-passive').value, 10) || 50000;
-            break;
-        case 'step-passive-term':
-            state.investmentData.term_months = parseInt(document.getElementById('term-passive').value, 10) || 60;
-            break;
-        case 'step-passive-income':
-            state.investmentData.passiveIncome = parseInt(document.getElementById('income-passive').value, 10) || null;
-            break;
-        case 'step-contribution':
-            state.investmentData.monthlyContribution = parseInt(document.getElementById('contribution-slider').value, 10) || 0;
-            break;
-        case 'step-risk':
-            const selectedRiskButton = document.querySelector('.risk-btn.selected');
-            if (selectedRiskButton) {
-                state.investmentData.riskProfile = selectedRiskButton.dataset.risk;
-            }
-            break;
+function collectDataFromStep() {
+    const goal = state.investmentData.goal;
+    let termInMonths;
+
+    if (goal === 'grow') {
+        state.investmentData.amount = parseInt(document.getElementById('amount-grow')?.value, 10) || 50000;
+        termInMonths = parseInt(document.getElementById('term-grow')?.value, 10) || 36;
+    } else if (goal === 'dream') {
+        state.investmentData.amount = parseInt(document.getElementById('initial-amount-dream')?.value, 10) || 50000;
+        termInMonths = parseInt(document.getElementById('term-dream')?.value, 10) || 36;
+    } else if (goal === 'passive') {
+        state.investmentData.amount = parseInt(document.getElementById('initial-amount-passive')?.value, 10) || 50000;
+        termInMonths = parseInt(document.getElementById('term-passive')?.value, 10) || 60;
+    }
+
+    state.investmentData.term_months = termInMonths;
+    delete state.investmentData.term;
+
+    state.investmentData.dreamAmount = parseInt(document.getElementById('amount-dream')?.value, 10) || null;
+    state.investmentData.passiveIncome = parseInt(document.getElementById('income-passive')?.value, 10) || null;
+    state.investmentData.monthlyContribution = parseInt(document.getElementById('contribution-slider')?.value, 10) || 0;
+
+    const selectedRiskButton = document.querySelector('.risk-btn.selected');
+    if (selectedRiskButton) {
+        state.investmentData.riskProfile = selectedRiskButton.dataset.risk;
     }
 }
 
@@ -295,9 +275,9 @@ function getChartOptions(yAxisLabel = 'Сумма капитала, ₽') {
 
 function updateChart() {
     if (!chartInstance) return;
-    const currentStepId = state.history[state.history.length - 1];
-    collectDataFromStep(currentStepId);
+    collectDataFromStep();
 
+    const currentStepId = state.history[state.history.length - 1];
     const termSteps = ['step-grow-term', 'step-dream-term', 'step-passive-term'];
 
     if (termSteps.includes(currentStepId)) {
@@ -335,7 +315,7 @@ async function drawBaseScenario(amount, termInMonths) {
                 riskProfile: 'moderate',
                 amount: amount,
                 term_months: termInMonths,
-                monthlyContribution: state.investmentData.monthlyContribution || 0
+                monthlyContribution: state.investmentData.monthlyContribution
             })
         });
         if (!response.ok) throw new Error('Ошибка сети');
@@ -353,7 +333,7 @@ async function drawBaseScenario(amount, termInMonths) {
             }]
         };
         chartInstance.update();
-        updateChartLegend(chartInstance, { ...state.investmentData, amount: amount }, 'capital');
+        updateChartLegend(chartInstance, state.investmentData, 'capital');
     } catch (error) {
         console.error("Ошибка при получении базового сценария:", error);
         drawInitialPreview(amount, termInMonths);
@@ -373,7 +353,7 @@ function drawInitialPreview(amount, termInMonths) {
         }]
     };
     chartInstance.update();
-    updateChartLegend(chartInstance, state.investmentData, 'capital');
+    updateChartLegend(chartInstance, state, 'capital');
 }
 
 function drawPreviewWithTargetLine(targetAmount, startAmount, termInMonths, yAxisLabel = 'Сумма капитала, ₽') {
@@ -387,12 +367,12 @@ function drawPreviewWithTargetLine(targetAmount, startAmount, termInMonths, yAxi
         ]
     };
     chartInstance.update();
-    updateChartLegend(chartInstance, state.investmentData, 'capital');
+    updateChartLegend(chartInstance, state, 'capital');
 }
 
 function drawForecast(data) {
     if (!chartInstance) return;
-    const { forecast, goal_target_capital, monthly_income_forecast } = data;
+    const { forecast, goal_target_capital, monthly_income_forecast, deposit_forecast, forecast_without_contribution } = data;
     const isPassiveGoal = state.investmentData.goal === 'passive';
     const isIncomeView = isPassiveGoal && state.chartView === 'income';
 
@@ -406,32 +386,29 @@ function drawForecast(data) {
         datasets.push({ label: 'Прогноз дохода', data: monthly_income_forecast, borderColor: '#f8f9fa', tension: 0.1 });
         targetLineValue = state.investmentData.passiveIncome;
     } else {
-        const currentStepId = state.history[state.history.length - 1];
-
-        // Добавляем линии сравнения без пополнений
-        if (currentStepId === 'step-contribution' && data.forecast_without_contribution) {
-            datasets.push({ label: 'Макс. (без пополнений)', data: data.forecast_without_contribution.max, borderColor: 'rgba(40, 167, 69, 0.5)', borderDash: [5, 5], tension: 0.1 });
-            datasets.push({ label: 'Сред. (без пополнений)', data: data.forecast_without_contribution.avg, borderColor: 'rgba(248, 249, 250, 0.5)', borderDash: [5, 5], tension: 0.1 });
-            datasets.push({ label: 'Мин. (без пополнений)', data: data.forecast_without_contribution.min, borderColor: 'rgba(220, 53, 69, 0.5)', borderDash: [5, 5], tension: 0.1 });
-        }
-        
         datasets.push({ label: 'Макс. доход', data: forecast.max, borderColor: '#28a745', tension: 0.1 });
         datasets.push({ label: 'Сред. доход', data: forecast.avg, borderColor: '#f8f9fa', tension: 0.1 });
         datasets.push({ label: 'Мин. доход', data: forecast.min, borderColor: '#dc3545', tension: 0.1 });
-
-        // Добавляем линию вклада ТОЛЬКО на шаге выбора риска
-        if (currentStepId === 'step-risk' && data.deposit_forecast) {
-            datasets.push({
-                label: 'Накопления на вкладе',
-                data: data.deposit_forecast,
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-                borderDash: [5, 5],
-                borderWidth: 2,
-                pointRadius: 0,
-                tension: 0.1
+        
+        if (deposit_forecast) {
+             datasets.push({
+                label: 'Вклад в банке', data: deposit_forecast,
+                borderColor: 'rgba(108, 117, 125, 0.7)', borderDash: [5, 5],
+                borderWidth: 2, pointRadius: 0, tension: 0.1
             });
         }
         
+        if (forecast_without_contribution) {
+            const顏色 = ['rgba(40, 167, 69, 0.5)', 'rgba(248, 249, 250, 0.5)', 'rgba(220, 53, 69, 0.5)'];
+            ['max', 'avg', 'min'].forEach((key, index) => {
+                 datasets.push({
+                    label: `Без пополнений (${key})`, data: forecast_without_contribution[key],
+                    borderColor: 顏色[index], borderDash: [3, 3],
+                    borderWidth: 2, pointRadius: 0, tension: 0.1
+                });
+            });
+        }
+
         if (state.investmentData.goal === 'dream') {
             targetLineValue = state.investmentData.dreamAmount;
         } else if (isPassiveGoal) {
@@ -463,11 +440,13 @@ function updateChartLegend(chart, investmentData, currentChartView) {
     let legendHTML = '';
 
     datasets.forEach(dataset => {
+        if (dataset.label.startsWith('Без пополнений')) return;
+
         const meta = chart.getDatasetMeta(chart.data.datasets.indexOf(dataset));
         if (meta.hidden || !dataset.data || dataset.data.length === 0) {
             return;
         }
-
+        
         const firstValue = dataset.data[0];
         const lastValue = dataset.data[dataset.data.length - 1];
         const color = dataset.borderColor;
@@ -480,9 +459,9 @@ function updateChartLegend(chart, investmentData, currentChartView) {
             case 'Макс. доход': labelText = 'Макс. доход'; break;
             case 'Сред. доход': labelText = 'Сред. доход'; break;
             case 'Мин. доход': labelText = 'Мин. доход'; break;
-            case 'Накопления на вкладе': labelText = 'Доход на вкладе'; break;
             case 'Прогноз дохода': labelText = 'Прогноз дохода'; break;
             case 'Базовый сценарий': labelText = 'Базовый сценарий'; break;
+            case 'Вклад в банке': labelText = 'Вклад в банке'; break;
             case 'Цель':
                 isGoalLine = true;
                 if (investmentData.goal === 'dream') {
@@ -491,10 +470,7 @@ function updateChartLegend(chart, investmentData, currentChartView) {
                     labelText = (currentChartView === 'income') ? 'Целевой доход' : 'Необходимая сумма';
                 }
                 break;
-            default:
-                 // Пропускаем линии "без пополнений", чтобы не засорять легенду
-                if (dataset.label.includes('(без пополнений)')) return;
-                break;
+            default: return;
         }
         
         if (!isGoalLine && dataset.label !== 'Прогноз дохода' && typeof firstValue !== 'undefined') {
@@ -504,7 +480,7 @@ function updateChartLegend(chart, investmentData, currentChartView) {
             profitText = `<span class="${profitClass}">${sign}${Math.round(profit).toLocaleString('ru-RU')} ₽</span>`;
         }
 
-        const lineStyle = dataset.borderDash ? `border-bottom: 2px dashed ${color};` : `background-color: ${color};`;
+        const lineStyle = isGoalLine || dataset.label === 'Вклад в банке' ? `border-bottom: 2px dashed ${color};` : `background-color: ${color};`;
 
         legendHTML += `
             <div class="legend-item">

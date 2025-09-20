@@ -14,6 +14,31 @@ from portfolio_bot.handlers.start import register_start_handler
 from portfolio_bot.handlers.about import register_about_handler
 from portfolio_bot.handlers.admin import register_admin_handlers
 
+# --- НОВАЯ ФУНКЦИЯ: Форматирование срока в месяцах с правильными склонениями ---
+def format_term_in_months(months):
+    """Принимает количество месяцев и возвращает красивую строку."""
+    if not isinstance(months, (int, float)) or months <= 0:
+        return "Неопределенный срок"
+    
+    months = int(months)
+    years = round(months / 12, 1)
+    if years.is_integer():
+        years = int(years)
+
+    last_digit = months % 10
+    last_two_digits = months % 100
+
+    if last_two_digits in [11, 12, 13, 14]:
+        month_str = "месяцев"
+    elif last_digit == 1:
+        month_str = "месяц"
+    elif last_digit in [2, 3, 4]:
+        month_str = "месяца"
+    else:
+        month_str = "месяцев"
+    
+    return f"{months} {month_str} (~{years} г.)"
+
 # --- Инициализация Firebase Admin SDK ---
 db = None
 try:
@@ -33,40 +58,89 @@ calculator = PortfolioCalculator(repository)
 bot = telebot.TeleBot(config.BOT_TOKEN)
 print("Бот инициализирован...")
 
-# --- ИЗМЕНЕНИЕ: Обработчик стал более надежным ---
+# --- ИЗМЕНЕНИЕ: Обработчик полностью переработан для поддержки целей ---
 @bot.message_handler(content_types=['web_app_data'])
 def handle_web_app_data(message):
-    """
-    Получает от фронтенда ГОТОВЫЙ объект портфеля и формирует из него сообщение.
-    """
     try:
         data_str = message.web_app_data.data
-        print(f"Получены данные из Web App: {data_str}")
+        final_data = json.loads(data_str)
+        investment_data = final_data.get('investmentData', {})
+        portfolio_data = final_data.get('portfolioData', {})
         
-        calculated_portfolio = json.loads(data_str)
+        goal = investment_data.get('goal', 'grow')
+        monthly_contribution = portfolio_data.get('monthly_contribution', 0)
+        term_months = portfolio_data.get('term_months')
+        formatted_term = format_term_in_months(term_months)
+        
+        contribution_text = ""
+        if monthly_contribution > 0:
+            contribution_text = f"Ежемесячное пополнение: *{monthly_contribution:,.0f} ₽*\\n"
 
-        # Безопасно получаем данные с помощью .get()
-        amount = calculated_portfolio.get('initial_amount', 0)
-        term = calculated_portfolio.get('term', 0)
-        strategy_name = calculated_portfolio.get('strategy_name', 'Не определена')
-        expected_return = calculated_portfolio.get('expected_annual_return', 0)
-        composition = calculated_portfolio.get('composition', [])
-
-        # Формируем состав портфеля для сообщения
-        composition_text = "\n".join([
-            # Используем .get() для каждого элемента, чтобы избежать ошибок
+        strategy_name = portfolio_data.get('strategy_name', 'Не определена')
+        expected_return = portfolio_data.get('expected_annual_return', 0)
+        composition = portfolio_data.get('composition', [])
+        
+        composition_text = "\\n".join([
             f"▫️ *{item.get('fund_name', 'Неизвестный актив')}* ({item.get('percentage', 0):.0f}%)"
             for item in composition
         ])
 
-        response_text = (
-            f"✅ *Ваш портфель готов!*\n\n"
-            f"Сумма: *{amount:,} ₽*\n"
-            f"Срок: *{term} лет*\n\n"
-            f"Стратегия: *{strategy_name}*\n"
-            f"Ожидаемая годовая доходность: *~{expected_return}%*\n\n"
-            f"*Состав портфеля:*\n{composition_text}"
-        )
+        forecast = portfolio_data.get('forecast', {})
+        forecast_min = forecast.get('min', [])[-1]
+        forecast_avg = forecast.get('avg', [])[-1]
+        forecast_max = forecast.get('max', [])[-1]
+        initial_amount = portfolio_data.get('initial_amount', 0)
+
+
+        response_text = ""
+        
+        if goal == 'dream':
+            dream_amount = investment_data.get('dreamAmount', 0)
+            response_text = (
+                f"🎯 *Ваша цель: Накопить на мечту*\\n\\n"
+                f"Сумма цели: *{dream_amount:,.0f} ₽*\\n"
+                f"Первый взнос: *{initial_amount:,.0f} ₽*\\n"
+                f"{contribution_text}"
+                f"Срок: *{formatted_term}*\\n\\n"
+                f"📈 *Прогноз итогового капитала*\\n"
+                f"• В худшем случае: *~{forecast_min:,.0f} ₽*\\n"
+                f"• Базовый прогноз: *~{forecast_avg:,.0f} ₽*\\n"
+                f"• В лучшем случае: *~{forecast_max:,.0f} ₽*\\n"
+                f"*{strategy_name} (~{expected_return}% годовых)*\\n"
+                f"{composition_text}"
+            )
+        elif goal == 'passive':
+            passive_income = investment_data.get('passiveIncome', 0)
+            min_income = (forecast_min * (18.0 / 100)) / 12
+            avg_income = (forecast_avg * (18.0 / 100)) / 12
+            max_income = (forecast_max * (18.0 / 100)) / 12
+            response_text = (
+                f"🏝️ *Ваша цель: Пассивный доход*\\n\\n"
+                f"Желаемый доход: *{passive_income:,.0f} ₽/мес*\\n"
+                f"Первый взнос: *{initial_amount:,.0f} ₽*\\n"
+                f"{contribution_text}"
+                f"Срок накопления: *{formatted_term}*\\n\\n"
+                f"📈 *Прогноз пассивного дохода в месяц*\\n"
+                f"• В худшем случае: *~{min_income:,.0f} ₽*\\n"
+                f"• Базовый прогноз: *~{avg_income:,.0f} ₽*\\n"
+                f"• В лучшем случае: *~{max_income:,.0f} ₽*\\n"
+                f"*{strategy_name} (~{expected_return}% годовых)*\\n"
+                f"{composition_text}"
+            )
+        else: # goal == 'grow'
+            response_text = (
+                f"💰 *Ваша цель: Приумножить капитал*\\n\\n"
+                f"Первый взнос: *{initial_amount:,.0f} ₽*\\n"
+                f"{contribution_text}"
+                f"Срок: *{formatted_term}*\\n\\n"
+                f"📈 *Прогноз роста капитала*\\n"
+                f"• В худшем случае: *~{forecast_min:,.0f} ₽*\\n"
+                f"• Базовый прогноз: *~{forecast_avg:,.0f} ₽*\\n"
+                f"• В лучшем случае: *~{forecast_max:,.0f} ₽*\\n"
+                f"*{strategy_name} (~{expected_return}% годовых)*\\n"
+                f"{composition_text}"
+            )
+
         bot.send_message(message.chat.id, response_text, parse_mode='Markdown')
 
     except Exception as e:
@@ -82,6 +156,4 @@ print("Обработчики команд зарегистрированы.")
 # --- Запуск бота ---
 if __name__ == '__main__':
     print("Бот запущен и готов к работе!")
-3.
-bot.polling(none_stop=True)
-
+    bot.polling(none_stop=True)

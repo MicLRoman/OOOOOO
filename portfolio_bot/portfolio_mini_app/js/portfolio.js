@@ -277,10 +277,10 @@ function renderPage(portfolioData, invData) {
         <div id="funds-info-popup" class="popup-overlay">
             <div class="popup-content">
                 <button class="popup-close" id="close-funds-popup-btn">&times;</button>
-                <h3>Принцип диверсификации</h3>
+                <h3>Ваши деньги работают на экономику</h3>
                 <img src="img/factory.jpg" alt="Промышленный пейзаж" class="popup-image">
-                <p>Ваши средства распределяются по фондам, которые инвестируют в сотни крупнейших российских компаний. Это снижает риски по сравнению с покупкой акций одной компании и обеспечивает широкую диверсификацию.</p>
-                <p style="font-size: 0.8rem; color: #aaaaaa; margin-top: 1rem;">Информация не является индивидуальной инвестиционной рекомендацией.</p>
+                <p>В вашем портфеле используются паевые инвестиционные фонды (ПИФы). Каждый такой фонд — это готовый набор из множества ценных бумаг (акций или облигаций).</p>
+                <p>Такой подход позволяет диверсифицировать вложения, то есть распределить их по разным активам, вместо покупки акций одной компании. <strong>Данная информация не является индивидуальной инвестиционной рекомендацией.</strong></p>
                 <button class="btn btn-main" id="confirm-funds-popup-btn">Всё понятно!</button>
             </div>
         </div>
@@ -296,7 +296,7 @@ function renderPage(portfolioData, invData) {
                 </div>
             </div>
         </div>
-        
+
         <div id="calculation-help-popup" class="popup-overlay">
             <div class="popup-content">
                 <button class="popup-close">&times;</button>
@@ -309,12 +309,11 @@ function renderPage(portfolioData, invData) {
                     <li><strong>Оптимистичный и Пессимистичный (зеленая и красная):</strong> Это вероятностный коридор, в который попадает большинство реалистичных исходов.</li>
                 </ul>
                 <p style="font-size: 0.8rem; color: #aaaaaa; text-align: left;">Все расчеты и прогнозы носят исключительно информационный характер и не являются индивидуальной инвестиционной рекомендацией.</p>
-                 <button class="btn btn-main" id="close-calc-help-btn">Понятно</button>
+                <button class="btn btn-main" id="close-calc-help-btn">Понятно</button>
             </div>
         </div>
     `;
 
-    // ИСПРАВЛЕНИЕ: Вызываем setupEventListeners здесь, после отрисовки
     setupEventListeners();
     initializeChart(portfolioData, invData);
     initializeSimilarPortfoliosSlider();
@@ -328,7 +327,6 @@ function setupEventListeners() {
     });
     
     document.getElementById('funds-info-help-btn').addEventListener('click', () => {
-        trackEvent('click_funds_info_help');
         document.getElementById('funds-info-popup').classList.add('active');
     });
 
@@ -354,6 +352,11 @@ function setupEventListeners() {
             } else if (headerText.includes('активы')) {
                 sectionName = 'assets';
             }
+            
+            trackEvent('toggle_portfolio_section', { 
+                section: sectionName,
+                state: event.target.open ? 'opened' : 'closed' 
+            });
         });
     });
 
@@ -365,6 +368,10 @@ function setupEventListeners() {
              if (e.target.classList.contains('toggle-icon')) {
                 return;
              }
+             if (localStorage.getItem('goalChangePopupShown') !== 'true') {
+                document.getElementById('change-goal-popup').classList.add('active');
+                localStorage.setItem('goalChangePopupShown', 'true');
+             }
         });
     }
 
@@ -374,10 +381,7 @@ function setupEventListeners() {
         window.location.href = 'index.html';
     });
 
-    const closePopup = () => {
-        trackEvent('close_change_goal_popup');
-        document.getElementById('change-goal-popup').classList.remove('active');
-    };
+    const closePopup = () => document.getElementById('change-goal-popup').classList.remove('active');
     document.getElementById('cancel-change-goal-btn').addEventListener('click', closePopup);
     document.getElementById('cancel-change-goal-btn-2').addEventListener('click', closePopup);
 
@@ -424,27 +428,19 @@ function setupEventListeners() {
             }
         });
     }
-    
-    // Добавляем отслеживание для кнопки помощи по расчету
-    const calcHelpBtn = document.querySelector('.chart-header .help-btn');
-    if(calcHelpBtn) {
-        calcHelpBtn.addEventListener('click', () => {
-            trackEvent('click_calculation_method_help_portfolio');
-            document.getElementById('calculation-help-popup').classList.add('active');
-        });
-    }
 
+    const chartHelpBtn = document.getElementById('chart-help-btn');
     const calcHelpPopup = document.getElementById('calculation-help-popup');
-    if (calcHelpPopup) {
-        const closeButton = calcHelpPopup.querySelector('.popup-close, #close-calc-help-btn');
-        const closePopupAction = () => {
-            trackEvent('close_calculation_method_popup_portfolio');
-            calcHelpPopup.classList.remove('active');
-        };
-        closeButton.addEventListener('click', closePopupAction);
+
+    if (chartHelpBtn && calcHelpPopup) {
+        chartHelpBtn.addEventListener('click', () => {
+            calcHelpPopup.classList.add('active');
+            trackEvent('show_calculation_help');
+        });
+
         calcHelpPopup.addEventListener('click', (e) => {
-            if (e.target === calcHelpPopup) {
-                closePopupAction();
+            if (e.target === calcHelpPopup || e.target.closest('.popup-close, #close-calc-help-btn')) {
+                calcHelpPopup.classList.remove('active');
             }
         });
     }
@@ -701,5 +697,4 @@ function showError(message) {
         `;
     }
 }
-
 
