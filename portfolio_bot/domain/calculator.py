@@ -2,7 +2,8 @@ import numpy as np
 import math
 
 PASSIVE_INCOME_RATE_PERCENT = 18.0
-NUM_SIMULATIONS = 10000
+NUM_SIMULATIONS = 50000
+# --- NEW: Deposit rate based on the provided image ---
 DEPOSIT_ANNUAL_RATE_PERCENT = 15.3
 
 class PortfolioCalculator:
@@ -11,11 +12,11 @@ class PortfolioCalculator:
 
     def calculate(self, risk_profile: str, amount: int, term: int = None,
                   selected_funds: list = None, dreamAmount: int = None, passiveIncome: int = None, term_months: int = None,
-                  monthly_contribution: int = 0) -> dict: 
+                  monthly_contribution: int = 0) -> dict: # <-- НОВЫЙ ПАРАМЕТР
 
         if term_months:
-            num_months = int(term_months)
-            term = round(num_months / 12, 1)
+            num_months = term_months
+            term = round(term_months / 12, 1)
         else:
             num_months = (term or 1) * 12
 
@@ -51,11 +52,7 @@ class PortfolioCalculator:
         
         forecast = self._generate_forecast_monte_carlo(amount, num_months, total_return, total_volatility, monthly_contribution, risk_profile)
         
-        forecast_without_contribution = None
-        if monthly_contribution > 0:
-            print("--- 📊 [КАЛЬКУЛЯТОР] Расчет дополнительного прогноза без пополнений... ---")
-            forecast_without_contribution = self._generate_forecast_monte_carlo(amount, num_months, total_return, total_volatility, 0, risk_profile)
-
+        # --- NEW: Calculate deposit forecast ---
         deposit_forecast = self._generate_deposit_forecast(amount, num_months, monthly_contribution)
 
         target_capital = None
@@ -76,8 +73,7 @@ class PortfolioCalculator:
             "expected_annual_return": f"{total_return:.1f}",
             "composition": final_composition_details,
             "forecast": forecast,
-            "forecast_without_contribution": forecast_without_contribution,
-            "deposit_forecast": deposit_forecast,
+            "deposit_forecast": deposit_forecast, # <-- NEW
             "goal_dream_amount": dreamAmount,
             "goal_target_capital": target_capital,
             "monthly_income_forecast": monthly_income_forecast,
@@ -179,6 +175,7 @@ class PortfolioCalculator:
                 })
         return final_composition
     
+    # --- NEW: Method to calculate deposit growth ---
     def _generate_deposit_forecast(self, amount, num_months, monthly_contribution=0):
         """Calculates the growth of a deposit with monthly capitalization."""
         monthly_rate = (DEPOSIT_ANNUAL_RATE_PERCENT / 100) / 12
@@ -208,39 +205,32 @@ class PortfolioCalculator:
             final_capital.append(c)
         return final_capital
 
-    def _generate_forecast_monte_carlo(self, amount, num_months, annual_return, annual_volatility, monthly_contribution=0, risk_profile='moderate'):
+    def _generate_forecast_monte_carlo(self, amount, num_months, annual_return, annual_volatility, monthly_contribution=0, risk_profile='moderate'): # <-- НОВЫЙ ПАРАМЕТР
         monthly_return = (1 + annual_return / 100)**(1/12) - 1
         monthly_volatility = annual_volatility / math.sqrt(12) / 100
 
         simulations_matrix = np.zeros((num_months + 1, NUM_SIMULATIONS))
         simulations_matrix[0] = amount
         
-        # Исправленный цикл симуляции
-        for t in range(1, num_months + 1):
-            # Пополнение происходит в начале каждого месяца
-            current_capital = simulations_matrix[t-1] + monthly_contribution
-            
-            # Затем начисляются проценты за месяц
+        # --- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Доход за 1-й мес. только на стартовый капитал ---
+        random_shocks_first_month = np.random.normal(0, 1, NUM_SIMULATIONS)
+        monthly_returns_first_month = monthly_return + random_shocks_first_month * monthly_volatility
+        simulations_matrix[1] = simulations_matrix[0] * (1 + monthly_returns_first_month)
+
+        for t in range(2, num_months + 1):
             random_shocks = np.random.normal(0, 1, NUM_SIMULATIONS)
             monthly_returns = monthly_return + random_shocks * monthly_volatility
-            simulations_matrix[t] = current_capital * (1 + monthly_returns)
-
-        # Отдельно обрабатываем случай без пополнений, чтобы избежать двойного сложения
-        if monthly_contribution == 0:
-            simulations_matrix = np.zeros((num_months + 1, NUM_SIMULATIONS))
-            simulations_matrix[0] = amount
-            for t in range(1, num_months + 1):
-                random_shocks = np.random.normal(0, 1, NUM_SIMULATIONS)
-                monthly_returns = monthly_return + random_shocks * monthly_volatility
-                simulations_matrix[t] = simulations_matrix[t-1] * (1 + monthly_returns)
-
+            previous_capital = simulations_matrix[t-1]
+            capital_with_contribution = previous_capital + monthly_contribution
+            simulations_matrix[t] = capital_with_contribution * (1 + monthly_returns)
 
         labels = list(range(num_months + 1))
         
+        # --- ИЗМЕНЕНИЕ: Динамический выбор перцентилей ---
         if risk_profile in ['moderate', 'moderate-conservative', 'moderate-aggressive']:
             min_percentile = 15
             max_percentile = 85
-        else:
+        else: # conservative, aggressive, no-loss
             min_percentile = 5
             max_percentile = 95
             
