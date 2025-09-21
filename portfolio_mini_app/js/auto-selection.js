@@ -120,12 +120,23 @@ function setupEventListeners() {
              backendDataCache = null; 
              updateChart();
         });
+
+        // --- НОВОЕ: Добавляем отслеживание на событие 'change' ---
+        // Это событие срабатывает, когда пользователь закончил взаимодействие (отпустил слайдер или убрал фокус с поля)
+        element.addEventListener('change', () => {
+            const eventName = element.type === 'range' ? 'slider_changed' : 'input_number_changed';
+            trackEvent(eventName, {
+                elementId: element.id,
+                value: element.value
+            });
+        });
     });
     
-    // --- ИСПРАВЛЕНИЕ: Добавляем проверки на существование элементов ---
+    // --- ИЗМЕНЕНИЕ: Добавляем отслеживание в уже существующий обработчик ---
     const contributionSlider = document.getElementById('contribution-slider');
     if (contributionSlider) {
         contributionSlider.addEventListener('change', () => {
+            // Аналитика уже добавлена в общем обработчике выше
             collectDataFromStep('step-contribution');
             makeApiCallAndUpdateChart();
         });
