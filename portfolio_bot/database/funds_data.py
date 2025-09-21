@@ -104,7 +104,7 @@ EQUITY_FUNDS = [
     {
         "name": "Альфа-Капитал - Великолепная семерка", "risk_level": "high",
         "annual_return_percent": 6.79, "volatility_percent": 25.43,
-        "purchase_url": "https://finuslugi.ru/invest/funds/75d35014-d64a-419d-bfa7-e29d40b7907e",
+        "purchase_url": "https://finuslugi.ru/invest/funds/01fc1eda-e671-4e59-aaff-522a81a71091",
         "one_year_return_str": "+6,79%", "min_purchase_str": "От 100 ₽",
         "description": "Фонд следует за динамикой акций 7 крупнейших американских технологических компаний."
     }

@@ -2,6 +2,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
+import requests  # Импортируем requests для отправки HTTP-запросов
 
 # Используем правильные импорты
 from database.repository import CombinedRepository
@@ -29,10 +30,10 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 @app.route('/<path:path>')
 def serve_static(path):
     """
-    Отдаёт запрошенный файл из папки с фронтендом.
+    Отдает запрошенный файл из папки с фронтендом.
     """
     if not os.path.isdir(static_folder_path):
-        return "Ошибка: директория со статическими файлами не найдена.", 500
+        return "Ошибка: Директория со статическими файлами не найдена.", 500
 
     file_path = os.path.join(static_folder_path, path)
     if not os.path.exists(file_path):
@@ -47,22 +48,20 @@ def serve_static(path):
 @app.route('/api/calculate', methods=['POST'])
 def calculate_portfolio_endpoint():
     """
-    Точка входа (endpoint) для расчётов.
+    Точка входа (endpoint) для расчетов.
     """
     try:
         data = request.json
         print(f"Получен API-запрос на /api/calculate: {data}")
 
-        # --- ИЗМЕНЕНИЕ: Добавляем прием monthlyContribution ---
         result = calculator.calculate(
             risk_profile=data.get('riskProfile'),
             amount=int(data.get('amount')),
-            term=data.get('term'), 
             term_months=data.get('term_months'),
             selected_funds=data.get('selected_funds'),
             dreamAmount=data.get('dreamAmount'),
             passiveIncome=data.get('passiveIncome'),
-            monthly_contribution=int(data.get('monthlyContribution', 0)) # <-- НОВЫЙ ПАРАМЕТР
+            monthly_contribution=int(data.get('monthlyContribution', 0))
         )
         return jsonify(result)
 
@@ -82,6 +81,32 @@ def get_all_funds_endpoint():
         print(f"Произошла ошибка в /api/funds: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
+# НОВЫЙ МЕТОД ДЛЯ ФОНОВОЙ ОТПРАВКИ СООБЩЕНИЯ
+@app.route('/api/notify', methods=['POST'])
+def notify_user_endpoint():
+    """
+    Принимает данные от фронтенда и проксирует их боту для отправки сообщения.
+    """
+    try:
+        data = request.json
+        # Мы просто пересылаем полученные данные на внутренний эндпоинт бота
+        # Предполагаем, что бот (main.py) запущен на порту 8080
+        # В реальном проде это будет адрес сервиса бота
+        bot_url = "http://127.0.0.1:8080/send_portfolio"
+        response = requests.post(bot_url, json=data)
+        
+        if response.status_code == 200:
+            print(f"✅ Запрос на уведомление успешно перенаправлен боту.")
+            return jsonify({"status": "ok"})
+        else:
+            print(f"⚠️ Ошибка при перенаправлении запроса боту: {response.text}")
+            return jsonify({"error": "Не удалось связаться с сервисом бота"}), 502
+
+    except Exception as e:
+        print(f"Произошла ошибка в /api/notify: {e}")
+        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)
+
