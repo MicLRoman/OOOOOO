@@ -237,7 +237,7 @@ class PortfolioCalculator:
         min_data = np.percentile(simulations_matrix, min_percentile, axis=1).tolist()
         # --- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Используем среднее арифметическое вместо медианы ---
         avg_data = np.mean(simulations_matrix, axis=1).tolist()
-        avg_data = np.percentile(simulations_matrix, 50, axis=1).tolist()
+        # avg_data = np.percentile(simulations_matrix, 50, axis=1).tolist()
         max_data = np.percentile(simulations_matrix, max_percentile, axis=1).tolist()
 
         return {"labels": labels, "avg": avg_data, "min": min_data, "max": max_data}
