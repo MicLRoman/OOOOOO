@@ -419,8 +419,8 @@ function drawForecast(data) {
     } else {
         const currentStepId = state.history[state.history.length - 1];
 
-        // Добавляем линии сравнения без пополнений
-        if (currentStepId === 'step-contribution' && data.forecast_without_contribution) {
+        // FIX: Add comparison lines for forecast without contributions
+        if (currentStepId === 'step-contribution' && state.investmentData.monthlyContribution > 0 && data.forecast_without_contribution) {
             datasets.push({ label: 'Макс. (без пополнений)', data: data.forecast_without_contribution.max, borderColor: 'rgba(40, 167, 69, 0.5)', borderDash: [5, 5], tension: 0.1 });
             datasets.push({ label: 'Сред. (без пополнений)', data: data.forecast_without_contribution.avg, borderColor: 'rgba(248, 249, 250, 0.5)', borderDash: [5, 5], tension: 0.1 });
             datasets.push({ label: 'Мин. (без пополнений)', data: data.forecast_without_contribution.min, borderColor: 'rgba(220, 53, 69, 0.5)', borderDash: [5, 5], tension: 0.1 });
@@ -540,14 +540,39 @@ async function makeApiCallAndUpdateChart() {
 
     try {
         chartInstance.canvas.style.opacity = '0.5';
+        
+        // 1. Основной запрос с текущими параметрами (с пополнениями или без)
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(state.investmentData)
         });
-        if (!response.ok) throw new Error('Ошибка сети');
-
+        if (!response.ok) throw new Error('Ошибка сети при основном запросе');
+        
         backendDataCache = await response.json();
+
+        // 2. Если есть пополнения, делаем второй запрос без них для сравнения
+        if (currentStepId === 'step-contribution' && state.investmentData.monthlyContribution > 0) {
+            const payloadWithoutContributions = {
+                ...state.investmentData,
+                monthlyContribution: 0
+            };
+            const responseWithout = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payloadWithoutContributions)
+            });
+
+            if (responseWithout.ok) {
+                const dataWithout = await responseWithout.json();
+                // 3. Добавляем данные для сравнения в кеш
+                backendDataCache.forecast_without_contribution = dataWithout.forecast;
+            } else {
+                 console.warn("Не удалось загрузить прогноз без пополнений для сравнения.");
+            }
+        }
+        
+        // 4. Отрисовываем график с полными данными
         drawForecast(backendDataCache);
 
     } catch (error) {

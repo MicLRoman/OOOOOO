@@ -2,7 +2,7 @@ import numpy as np
 import math
 
 PASSIVE_INCOME_RATE_PERCENT = 18.0
-NUM_SIMULATIONS = 50000
+NUM_SIMULATIONS = 10000
 # --- NEW: Deposit rate based on the provided image ---
 DEPOSIT_ANNUAL_RATE_PERCENT = 15.3
 
