@@ -5,8 +5,8 @@ import os
 import requests  # Импортируем requests для отправки HTTP-запросов
 
 # Используем правильные импорты
-from database.repository import CombinedRepository
-from domain.calculator import PortfolioCalculator
+from portfolio_bot.database.repository import CombinedRepository
+from portfolio_bot.domain.calculator import PortfolioCalculator
 
 # --- Инициализация бэкенд-логики ---
 repository = CombinedRepository()
