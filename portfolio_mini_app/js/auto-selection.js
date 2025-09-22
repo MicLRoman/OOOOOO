@@ -1,5 +1,18 @@
 import { trackEvent } from './script.js';
 
+// --- Вспомогательная функция для "устранения дребезга" (debounce) ---
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // --- Глобальное состояние ---
 const state = {
     history: [],
@@ -7,7 +20,7 @@ const state = {
         goal: null, 
         amount: 50000, 
         term_months: 12,
-        monthlyContribution: 0, // <-- НОВОЕ ПОЛЕ
+        monthlyContribution: 0,
         riskProfile: 'moderate',
         dreamAmount: null, 
         passiveIncome: null,
@@ -18,6 +31,9 @@ let chartInstance = null;
 let backendDataCache = null;
 const API_URL = `${window.location.origin}/api/calculate`;
 const PASSIVE_INCOME_RATE = 0.18; 
+const RECALCULATION_DELAY = 200; // 50ms задержка
+
+const debouncedMakeApiCall = debounce(makeApiCallAndUpdateChart, RECALCULATION_DELAY);
 
 const goalPaths = {
     grow: ['step-grow-amount', 'step-grow-term', 'step-risk', 'step-contribution'],
@@ -59,7 +75,6 @@ function setupEventListeners() {
             collectDataFromStep(currentStepId);
 
             let stepData = { step: currentStepId };
-            // ... (код для трекинга без изменений)
             trackEvent('auto_selection_step_completed', stepData);
 
             const currentPath = goalPaths[state.investmentData.goal];
@@ -76,7 +91,7 @@ function setupEventListeners() {
             trackEvent('auto_selection_risk_selected', { riskProfile: riskProfile });
             document.querySelectorAll('.risk-btn').forEach(btn => btn.classList.remove('selected'));
             button.classList.add('selected');
-            makeApiCallAndUpdateChart();
+            debouncedMakeApiCall();
         });
     });
 
@@ -121,26 +136,17 @@ function setupEventListeners() {
              updateChart();
         });
 
-        // --- НОВОЕ: Добавляем отслеживание на событие 'change' ---
-        // Это событие срабатывает, когда пользователь закончил взаимодействие (отпустил слайдер или убрал фокус с поля)
         element.addEventListener('change', () => {
             const eventName = element.type === 'range' ? 'slider_changed' : 'input_number_changed';
             trackEvent(eventName, {
                 elementId: element.id,
                 value: element.value
             });
+            // On change, trigger the debounced API call
+            collectDataFromStep(element.closest('.step').id);
+            debouncedMakeApiCall();
         });
     });
-    
-    // --- ИЗМЕНЕНИЕ: Добавляем отслеживание в уже существующий обработчик ---
-    const contributionSlider = document.getElementById('contribution-slider');
-    if (contributionSlider) {
-        contributionSlider.addEventListener('change', () => {
-            // Аналитика уже добавлена в общем обработчике выше
-            collectDataFromStep('step-contribution');
-            makeApiCallAndUpdateChart();
-        });
-    }
 
     const incomePassiveInput = document.getElementById('income-passive');
     if (incomePassiveInput) {
@@ -166,7 +172,6 @@ function setupEventListeners() {
             document.getElementById('calculation-help-popup').classList.add('active');
         });
     }
-    // ----------------------------------------------------------------
 
     setupSlider('term-grow', 'term-value-grow', formatTermForSlider);
     setupSlider('term-dream', 'term-value-dream', formatTermForSlider);
@@ -220,8 +225,6 @@ function updateView() {
 }
 
 function collectDataFromStep(activeStepId) {
-    // Эта функция теперь обновляет состояние только на основе активного шага,
-    // чтобы не перезаписывать данные из невидимых инпутов.
     switch (activeStepId) {
         case 'step-grow-amount':
             state.investmentData.amount = parseInt(document.getElementById('amount-grow').value, 10) || 50000;
@@ -312,11 +315,11 @@ function updateChart() {
     const termSteps = ['step-grow-term', 'step-dream-term', 'step-passive-term'];
 
     if (termSteps.includes(currentStepId)) {
-        drawBaseScenario(state.investmentData.amount, state.investmentData.term_months);
+        debouncedMakeApiCall(); // Use debounced call for term steps as well
     } else if (backendDataCache) {
         drawForecast(backendDataCache);
     } else if (currentStepId === 'step-risk' || currentStepId === 'step-contribution') {
-        makeApiCallAndUpdateChart();
+        debouncedMakeApiCall();
     }
     else {
         const { goal, dreamAmount, passiveIncome, amount, term_months } = state.investmentData;
@@ -335,43 +338,6 @@ function updateChart() {
     }
 }
 
-async function drawBaseScenario(amount, termInMonths) {
-    if (!chartInstance) return;
-    chartInstance.canvas.style.opacity = '0.5';
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                riskProfile: 'moderate',
-                amount: amount,
-                term_months: termInMonths,
-                monthlyContribution: state.investmentData.monthlyContribution || 0
-            })
-        });
-        if (!response.ok) throw new Error('Ошибка сети');
-        const data = await response.json();
-        
-        chartInstance.options = getChartOptions('Сумма капитала, ₽');
-        chartInstance.data = {
-            labels: data.forecast.labels,
-            datasets: [{
-                label: 'Базовый сценарий',
-                data: data.forecast.avg,
-                borderColor: '#f8f9fa',
-                tension: 0.1,
-                borderWidth: 2
-            }]
-        };
-        chartInstance.update();
-        updateChartLegend(chartInstance, { ...state.investmentData, amount: amount }, 'capital');
-    } catch (error) {
-        console.error("Ошибка при получении базового сценария:", error);
-        drawInitialPreview(amount, termInMonths);
-    } finally {
-        chartInstance.canvas.style.opacity = '1';
-    }
-}
 
 function drawInitialPreview(amount, termInMonths) {
     if (!chartInstance) return;
@@ -418,8 +384,6 @@ function drawForecast(data) {
         targetLineValue = state.investmentData.passiveIncome;
     } else {
         const currentStepId = state.history[state.history.length - 1];
-
-        // FIX: Add comparison lines for forecast without contributions
         if (currentStepId === 'step-contribution' && state.investmentData.monthlyContribution > 0 && data.forecast_without_contribution) {
             datasets.push({ label: 'Макс. (без пополнений)', data: data.forecast_without_contribution.max, borderColor: 'rgba(40, 167, 69, 0.5)', borderDash: [5, 5], tension: 0.1 });
             datasets.push({ label: 'Сред. (без пополнений)', data: data.forecast_without_contribution.avg, borderColor: 'rgba(248, 249, 250, 0.5)', borderDash: [5, 5], tension: 0.1 });
@@ -430,7 +394,6 @@ function drawForecast(data) {
         datasets.push({ label: 'Сред. доход', data: forecast.avg, borderColor: '#f8f9fa', tension: 0.1 });
         datasets.push({ label: 'Мин. доход', data: forecast.min, borderColor: '#dc3545', tension: 0.1 });
 
-        // Добавляем линию вклада ТОЛЬКО на шаге выбора риска
         if (currentStepId === 'step-risk' && data.deposit_forecast) {
             datasets.push({
                 label: 'Накопления на вкладе',
@@ -503,7 +466,6 @@ function updateChartLegend(chart, investmentData, currentChartView) {
                 }
                 break;
             default:
-                 // Пропускаем линии "без пополнений", чтобы не засорять легенду
                 if (dataset.label.includes('(без пополнений)')) return;
                 break;
         }
@@ -532,7 +494,9 @@ function updateChartLegend(chart, investmentData, currentChartView) {
 
 async function makeApiCallAndUpdateChart() {
     const currentStepId = state.history[state.history.length - 1];
-    if (currentStepId !== 'step-risk' && currentStepId !== 'step-contribution') {
+    const isApiStep = ['step-grow-term', 'step-dream-term', 'step-passive-term', 'step-risk', 'step-contribution'].includes(currentStepId);
+    
+    if (!isApiStep) {
         backendDataCache = null;
         updateChart();
         return;
@@ -541,7 +505,6 @@ async function makeApiCallAndUpdateChart() {
     try {
         chartInstance.canvas.style.opacity = '0.5';
         
-        // 1. Основной запрос с текущими параметрами (с пополнениями или без)
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -551,7 +514,6 @@ async function makeApiCallAndUpdateChart() {
         
         backendDataCache = await response.json();
 
-        // 2. Если есть пополнения, делаем второй запрос без них для сравнения
         if (currentStepId === 'step-contribution' && state.investmentData.monthlyContribution > 0) {
             const payloadWithoutContributions = {
                 ...state.investmentData,
@@ -565,14 +527,12 @@ async function makeApiCallAndUpdateChart() {
 
             if (responseWithout.ok) {
                 const dataWithout = await responseWithout.json();
-                // 3. Добавляем данные для сравнения в кеш
                 backendDataCache.forecast_without_contribution = dataWithout.forecast;
             } else {
                  console.warn("Не удалось загрузить прогноз без пополнений для сравнения.");
             }
         }
         
-        // 4. Отрисовываем график с полными данными
         drawForecast(backendDataCache);
 
     } catch (error) {

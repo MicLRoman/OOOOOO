@@ -1,5 +1,26 @@
 import { trackEvent } from './script.js';
 
+// --- Вспомогательная функция для "устранения дребезга" (debounce) ---
+/**
+ * Creates a debounced function that delays invoking `func` until after `wait` milliseconds have elapsed
+ * since the last time the debounced function was invoked.
+ * @param {Function} func The function to debounce.
+ * @param {number} wait The number of milliseconds to delay.
+ * @returns {Function} Returns the new debounced function.
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+
 // --- Глобальное состояние и константы ---
 let currentPortfolio = null;
 let investmentData = null; 
@@ -11,6 +32,10 @@ let originalPortfolioBeforeEdit = null;
 const tg = window.Telegram.WebApp;
 const API_URL_CALCULATE = `${window.location.origin}/api/calculate`;
 const API_URL_FUNDS = `${window.location.origin}/api/funds`;
+const RECALCULATION_DELAY = 50; // 500ms delay for debouncing
+
+// --- Создаем "отложенную" версию функции recalculatePortfolio ---
+const debouncedRecalculate = debounce(recalculatePortfolio, RECALCULATION_DELAY);
 
 const riskLevelMap = {
     'low': 'Низкий риск',
@@ -260,11 +285,18 @@ function setupEventListeners() {
     });
     contributionSlider.addEventListener('change', handleContributionSliderChange);
 
-    document.getElementById('risk-slider').addEventListener('change', handleRiskSliderChange);
-    document.getElementById('risk-slider').addEventListener('input', () => {
-         document.getElementById('risk-level-label').textContent = sliderValueToRiskProfile(document.getElementById('risk-slider').value).label;
+    const riskSlider = document.getElementById('risk-slider');
+    riskSlider.addEventListener('input', () => {
+         document.getElementById('risk-level-label').textContent = sliderValueToRiskProfile(riskSlider.value).label;
     });
+    riskSlider.addEventListener('change', handleRiskSliderChange);
     
+    const termSlider = document.getElementById('term-slider');
+    termSlider.addEventListener('input', () => {
+        document.getElementById('term-level-label').textContent = formatTerm(termSlider.value);
+    });
+    termSlider.addEventListener('change', handleTermSliderChange);
+
     document.getElementById('edit-tutorial-help-btn').addEventListener('click', showTutorial);
     document.getElementById('reset-btn').addEventListener('click', handleReset);
     document.getElementById('save-btn').addEventListener('click', handleSave);
@@ -281,35 +313,29 @@ function setupEventListeners() {
             e.currentTarget.classList.remove('active');
         }
     });
-    
-    const termSlider = document.getElementById('term-slider');
-    termSlider.addEventListener('change', handleTermSliderChange);
-    termSlider.addEventListener('input', () => {
-        document.getElementById('term-level-label').textContent = formatTerm(termSlider.value);
-    });
 }
 
-async function handleContributionSliderChange() {
+function handleContributionSliderChange() {
     const contribution = parseInt(document.getElementById('contribution-slider').value, 10);
     if (contribution !== (currentPortfolio.monthly_contribution || 0) ) {
         trackEvent('contribution_slider_used', { newContribution: contribution });
-        await recalculatePortfolio();
+        debouncedRecalculate();
     }
 }
 
-async function handleRiskSliderChange() {
+function handleRiskSliderChange() {
     const riskProfile = sliderValueToRiskProfile(document.getElementById('risk-slider').value).riskProfile;
     if (riskProfile !== currentPortfolio.riskProfile) {
         trackEvent('risk_slider_used', { newRisk: riskProfile });
-        await recalculatePortfolio();
+        debouncedRecalculate();
     }
 }
 
-async function handleTermSliderChange() {
+function handleTermSliderChange() {
     const termInMonths = document.getElementById('term-slider').value;
     if (termInMonths != currentPortfolio.term_months) {
         trackEvent('term_slider_used', { newTermMonths: termInMonths });
-        await recalculatePortfolio();
+        debouncedRecalculate();
     }
 }
 
@@ -320,6 +346,7 @@ async function handleReplaceAsset(newFundName, oldFundName) {
         asset.fund_name === oldFundName ? newFundName : asset.fund_name
     );
 
+    // Call recalculate directly without debounce for immediate feedback after selection
     await recalculatePortfolio({ selected_funds: newFundNames });
 
     document.getElementById('replace-asset-popup').classList.remove('active');
@@ -626,5 +653,3 @@ function sliderValueToRiskProfile(value) {
     if (value <= 80) return { riskProfile: 'moderate-aggressive', label: 'Умеренно-агрессивный' };
     return { riskProfile: 'aggressive', label: 'Агрессивный' };
 }
-
-
