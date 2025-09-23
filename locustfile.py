@@ -1,4 +1,4 @@
-from locustfile import HttpUser, task, between
+from locust import HttpUser, task, between
 
 class PortfolioUser(HttpUser):
     wait_time = between(1, 5) # Пауза между запросами от 1 до 5 сек

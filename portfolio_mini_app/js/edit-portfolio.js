@@ -117,8 +117,8 @@ function renderPage() {
                 <label for="contribution-slider">Ежемесячное пополнение</label>
                 <span id="contribution-level-label">0 ₽</span>
             </div>
-            <input type="range" id="contribution-slider" min="0" max="20000" step="100" value="0">
-            <div class="slider-labels"><span>0 ₽</span><span>20 000 ₽</span></div>
+            <input type="range" id="contribution-slider" min="0" max=60000" step="100" value="0">
+            <div class="slider-labels"><span>0 ₽</span><span>60 000 ₽</span></div>
         </div>
 
         <div class="risk-slider-container">
