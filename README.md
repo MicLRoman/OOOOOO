@@ -4,6 +4,14 @@
 
 ---
 
+### 🎬 How It Looks in Action
+
+| Step 1: Goal Selection & Onboarding | Step 2: Interactive Forecast | Step 3: Portfolio Customization |
+| :---------------------------------: | :--------------------------: | :-----------------------------: |
+|  ![Onboarding Process](gifs/first.gif)   | ![Interactive Forecast](gifs/second.gif) |   ![Portfolio Editor](gifs/third.gif)   |
+
+---
+
 ### 🎯 The Problem
 
 We are focused on the **"Beginning Enthusiast"** target audience (18-24 years old): students and recent graduates who have their first disposable income but find the world of investing intimidating.
