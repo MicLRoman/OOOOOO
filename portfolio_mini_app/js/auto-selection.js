@@ -31,7 +31,7 @@ let chartInstance = null;
 let backendDataCache = null;
 const API_URL = `${window.location.origin}/api/calculate`;
 const PASSIVE_INCOME_RATE = 0.18; 
-const RECALCULATION_DELAY = 200; // 50ms задержка
+const RECALCULATION_DELAY = 500; // 50ms задержка
 
 const debouncedMakeApiCall = debounce(makeApiCallAndUpdateChart, RECALCULATION_DELAY);
 

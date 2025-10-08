@@ -8,7 +8,7 @@ BOT_TOKEN = "8353031245:AAEAoHDIXjEGrf5DnrMKCuOaJftr9Q5Oj-U"
 # 8353031245:AAEAoHDIXjEGrf5DnrMKCuOaJftr9Q5Oj-U
 
 # ID администраторов бота (через запятую в .env) 
-ADMIN_IDS_STR = "6534859645, 1265245994, 1556788691"
+ADMIN_IDS_STR = "6534859645, 1265245994, 1556788691, 49465703"
 ADMIN_IDS = [int(admin_id.strip()) for admin_id in ADMIN_IDS_STR.split(',') if admin_id.strip()]
 
 # --- URL-адреса ---
