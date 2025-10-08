@@ -4,6 +4,14 @@
 
 ---
 
+### 🎬 How It Looks in Action
+
+| Step 1: Goal Selection & Onboarding | Step 2: Interactive Forecast | Step 3: Portfolio Customization |
+| :---------------------------------: | :--------------------------: | :-----------------------------: |
+|  ![Onboarding Process](gifs/first.gif)   | ![Interactive Forecast](gifs/second.gif) |   ![Portfolio Editor](gifs/third.gif)   |
+
+---
+
 ### 🎯 The Problem
 
 We are focused on the **"Beginning Enthusiast"** target audience (18-24 years old): students and recent graduates who have their first disposable income but find the world of investing intimidating.
@@ -72,14 +80,6 @@ The project is a hybrid system consisting of a Telegram bot, a web application (
 5. The user can then enter the **editor** to adjust the risk level, term, monthly contributions, or even swap out individual funds. The forecast chart updates with every change.
 6. Once satisfied, the user confirms the portfolio. The bot sends a summary message directly to their chat.
 7. A final screen provides direct links and instructions on how to purchase the selected assets.
-
----
-
-### 🎬 How It Looks in Action
-
-| Step 1: Goal Selection & Onboarding | Step 2: Interactive Forecast | Step 3: Portfolio Customization |
-| :---------------------------------: | :--------------------------: | :-----------------------------: |
-|  ![Onboarding Process](gifs/first.gif)   | ![Interactive Forecast](gifs/second.gif) |   ![Portfolio Editor](gifs/third.gif)   |
 
 ---
 
